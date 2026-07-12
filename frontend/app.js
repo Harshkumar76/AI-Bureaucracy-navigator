@@ -83,19 +83,30 @@ function renderFindings(data) {
     const card = document.createElement("div");
     card.className = `card ${f.status}` + (f.status === "ineligible" ? " ineligible-card" : "");
     const statusLabel = { eligible: "Eligible", possible: "Possibly eligible", ineligible: "Not eligible" }[f.status];
+    const railMark = { eligible: "✓", possible: "?", ineligible: "✕" }[f.status];
+    const railLabel = { eligible: "match", possible: "confirm", ineligible: "no match" }[f.status];
     const missing = f.documents_missing.length
       ? `<span class="missing">Missing: ${f.documents_missing.join(", ")}</span>`
       : "You have all required documents ✓";
     const linkNote = f.link_alive === false ? " ⚠ portal unreachable right now" : "";
     card.innerHTML = `
-      <h3>${f.name}<span class="badge ${f.status}">${statusLabel}</span></h3>
-      <div class="benefit">💰 ${f.benefit}</div>
-      <ul class="reasons">${f.reasons.map(r => `<li>${r}</li>`).join("")}</ul>
-      <div class="docs">📄 Needs: ${f.documents.join(", ")}<br>${missing}</div>
-      <div class="source">
-        <span>🔗 <a href="${f.official_url}" target="_blank" rel="noopener">${new URL(f.official_url).hostname}</a>
-          — ${f.apply_mode}${linkNote}</span>
-        <span>verified ${f.last_verified}</span>
+      <div class="rail">
+        <span class="rail-mark">${railMark}</span>
+        <span class="rail-label">${railLabel}</span>
+      </div>
+      <div class="card-main">
+        <div class="card-top">
+          <h3>${f.name}</h3>
+          <span class="pill ${f.status}">${statusLabel}</span>
+        </div>
+        <div class="benefit">${f.benefit}</div>
+        <ul class="reasons">${f.reasons.map(r => `<li>${r}</li>`).join("")}</ul>
+        <div class="docs">Needs: ${f.documents.join(", ")}<br>${missing}</div>
+        <div class="source">
+          <span><a href="${f.official_url}" target="_blank" rel="noopener">${new URL(f.official_url).hostname}</a>
+            — ${f.apply_mode}${linkNote}</span>
+          <span>verified ${f.last_verified}</span>
+        </div>
       </div>`;
     return card;
   };
