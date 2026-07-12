@@ -20,10 +20,14 @@ This MVP covers the first three stages end-to-end: a user fills a simple profile
 ## Architecture
 
 ```
-frontend/  (vanilla HTML/CSS/JS — form, SSE agent panel, findings cards)
+frontend/  (vanilla HTML/CSS/JS, dark theme)
+    index.html              landing page
+    signin.html             sign in / create account
+    app.html + app.js       the navigator app (session required)
     │  POST /api/navigate  →  text/event-stream
 backend/
     main.py                 FastAPI app (serves frontend + API)
+    auth.py                 email/password auth — SQLite + PBKDF2 + cookie sessions
     models.py               UserProfile / Finding (pydantic)
     rules.py                deterministic eligibility rule engine
     llm.py                  optional OpenAI-compatible LLM layer
@@ -33,6 +37,11 @@ backend/
     data/schemes.json       seed DB: 16 central schemes with rules + official URLs
 scripts/check_links.py      link checker (keeps "verified <date>" honest)
 ```
+
+**Auth:** email/password with HttpOnly cookie sessions (7-day expiry). Users live in
+`backend/data/users.db` (SQLite, gitignored). `/api/navigate` requires a session;
+the landing page and sign-in are public. No external auth dependencies — swap in
+OAuth later without touching the rest of the app.
 
 **Design principles**
 

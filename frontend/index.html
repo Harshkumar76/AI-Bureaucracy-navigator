@@ -3,153 +3,105 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Bureaucracy Navigator</title>
+<title>AI Bureaucracy Navigator — government schemes, without the bureaucracy</title>
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="landing">
 
-<header>
+<nav class="landing-nav">
+  <a class="logo" href="/">Bureaucracy&nbsp;Navigator</a>
+  <div class="nav-links">
+    <a href="#agents">Agents</a>
+    <a href="#how">How it works</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/signin.html#signup">Get started</a>
+  </div>
+</nav>
+
+<section class="hero">
   <div class="eyebrow">Multi-agent scheme discovery · India</div>
-  <h1>AI Bureaucracy Navigator</h1>
-  <p>Tell us about yourself — our agents find the government schemes you qualify for, with verified official links.</p>
-</header>
+  <h1>Government schemes,<br>without the bureaucracy.</h1>
+  <p>Describe your situation once. Five specialized AI agents find the scholarships, pensions,
+     and benefits you actually qualify for — with explainable verdicts, a document checklist,
+     and links you can trust.</p>
+  <div class="cta-row">
+    <a class="btn btn-primary btn-lg" href="/signin.html#signup">Find my schemes</a>
+    <a class="btn btn-ghost btn-lg" href="#how">See how it works</a>
+  </div>
+  <div class="stats">
+    <div><b>16</b><span>schemes indexed</span></div>
+    <div><b>13</b><span>official sources verified</span></div>
+    <div><b>5</b><span>specialized agents</span></div>
+    <div><b>0</b><span>links written by an LLM</span></div>
+  </div>
+</section>
 
-<main>
-  <!-- ============ LEFT: profile form ============ -->
-  <section class="panel" id="form-panel">
-    <h2>Your profile</h2>
-    <p class="hint">Every field is optional — the more you fill, the more precise the results.</p>
-
-    <form id="profile-form">
-      <div class="grid">
-        <label>Age
-          <input type="number" name="age" min="0" max="120" placeholder="e.g. 21">
-        </label>
-        <label>Gender
-          <select name="gender">
-            <option value="">—</option>
-            <option value="female">Female</option>
-            <option value="male">Male</option>
-            <option value="other">Other</option>
-          </select>
-        </label>
-        <label>State
-          <select name="state" id="state-select"><option value="">—</option></select>
-        </label>
-        <label>Residence
-          <select name="residence">
-            <option value="">—</option>
-            <option value="rural">Rural</option>
-            <option value="urban">Urban</option>
-          </select>
-        </label>
-        <label>Annual family income (₹)
-          <input type="number" name="annual_income" min="0" placeholder="e.g. 150000">
-        </label>
-        <label>Social category
-          <select name="category">
-            <option value="">—</option>
-            <option>General</option><option>OBC</option><option>SC</option>
-            <option>ST</option><option>EWS</option>
-          </select>
-        </label>
-        <label>Religion <span class="why" title="Only used to match notified minority-community schemes">?</span>
-          <select name="religion">
-            <option value="">Prefer not to say</option>
-            <option>Hindu</option><option>Muslim</option><option>Christian</option>
-            <option>Sikh</option><option>Buddhist</option><option>Jain</option>
-            <option>Parsi</option><option>Other</option>
-          </select>
-        </label>
-        <label>Occupation
-          <select name="occupation">
-            <option value="">—</option>
-            <option value="student">Student</option>
-            <option value="farmer">Farmer</option>
-            <option value="salaried">Salaried</option>
-            <option value="self_employed">Self-employed</option>
-            <option value="unemployed">Unemployed</option>
-            <option value="unorganised_worker">Unorganised worker</option>
-            <option value="artisan">Artisan / craftsperson</option>
-            <option value="other">Other</option>
-          </select>
-        </label>
-        <label>Education level
-          <select name="education_level">
-            <option value="">—</option>
-            <option value="below_10th">Below 10th</option>
-            <option value="10th_pass">10th pass</option>
-            <option value="12th_pass">12th pass</option>
-            <option value="ug">Undergraduate</option>
-            <option value="pg">Postgraduate</option>
-            <option value="not_studying">Not studying</option>
-          </select>
-        </label>
-        <label>Marital status
-          <select name="marital_status">
-            <option value="">—</option>
-            <option value="single">Single</option>
-            <option value="married">Married</option>
-            <option value="widowed">Widowed</option>
-            <option value="divorced">Divorced</option>
-          </select>
-        </label>
-        <label>Disability % (if any)
-          <input type="number" name="disability_pct" min="0" max="100" placeholder="e.g. 40">
-        </label>
-      </div>
-
-      <fieldset>
-        <legend>Household</legend>
-        <label class="check"><input type="checkbox" name="has_bpl_card"> BPL / priority ration card</label>
-        <label class="check"><input type="checkbox" name="owns_cultivable_land"> Family owns cultivable land</label>
-        <label class="check"><input type="checkbox" name="owns_pucca_house"> Family owns a pucca house</label>
-        <label class="check"><input type="checkbox" name="has_girl_child_under_10"> Girl child under 10 in family</label>
-      </fieldset>
-
-      <fieldset>
-        <legend>Documents I already have</legend>
-        <div class="doc-grid" id="doc-checkboxes">
-          <label class="check"><input type="checkbox" value="Aadhaar card"> Aadhaar card</label>
-          <label class="check"><input type="checkbox" value="Income certificate"> Income certificate</label>
-          <label class="check"><input type="checkbox" value="Caste certificate"> Caste certificate</label>
-          <label class="check"><input type="checkbox" value="Bank passbook"> Bank passbook</label>
-          <label class="check"><input type="checkbox" value="Ration card"> Ration card</label>
-          <label class="check"><input type="checkbox" value="Land ownership records"> Land records</label>
-        </div>
-      </fieldset>
-
-      <label>Anything else we should know? <span class="hint-inline">(optional — e.g. "my father passed away last year", "I scored 92% in class 12")</span>
-        <textarea name="extra_info" rows="3" placeholder="Describe your situation in your own words..."></textarea>
-      </label>
-
-      <button type="submit" id="submit-btn">🚀 Find my schemes</button>
-    </form>
-  </section>
-
-  <!-- ============ RIGHT: agents + findings ============ -->
-  <section class="panel" id="results-panel">
-    <div id="agent-panel" class="hidden">
-      <h2>Agents at work</h2>
-      <div id="agent-list"></div>
+<section id="agents" class="section">
+  <div class="eyebrow">The pipeline</div>
+  <h2>Five agents, one journey</h2>
+  <div class="feature-grid">
+    <div class="feature">
+      <div class="feature-emoji">📝</div>
+      <h3>Intake Agent</h3>
+      <p>Merges your form answers with facts mined from a free-text note — "my father passed away last year" becomes structured profile data.</p>
     </div>
-
-    <div id="findings" class="hidden">
-      <h2>Your results</h2>
-      <div id="summary-box"></div>
-      <div id="finding-cards"></div>
-      <div id="checklist-box"></div>
-      <p class="disclaimer">⚠ Results are indicative, based on what you told us. Final eligibility
-        depends on the documents you submit — always confirm on the official portal linked above.</p>
+    <div class="feature">
+      <div class="feature-emoji">🔍</div>
+      <h3>Discovery Agent</h3>
+      <p>Searches the indexed scheme database — central and state — for everything that could apply to you.</p>
     </div>
-
-    <div id="placeholder">
-      <p>👋 Fill in whatever you know and hit <b>Find my schemes</b>.<br>
-      You'll see each agent work in real time, then your matched schemes with official links.</p>
+    <div class="feature">
+      <div class="feature-emoji">⚖️</div>
+      <h3>Eligibility Agent</h3>
+      <p>Runs a deterministic rule engine, never an AI guess. Every verdict comes with its reasons; every unknown becomes a question, not a rejection.</p>
     </div>
-  </section>
-</main>
+    <div class="feature">
+      <div class="feature-emoji">📄</div>
+      <h3>Document Agent</h3>
+      <p>Builds one consolidated checklist across all your matched schemes and marks what you already have.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-emoji">🔗</div>
+      <h3>Verification Agent</h3>
+      <p>Every link comes from a curated official-source database with a last-verified date — never generated, never guessed.</p>
+    </div>
+  </div>
+</section>
 
-<script src="app.js"></script>
+<section id="how" class="section">
+  <div class="eyebrow">How it works</div>
+  <h2>Three steps to your benefits</h2>
+  <div class="steps">
+    <div class="step">
+      <span class="step-num">01</span>
+      <h3>Tell us about yourself</h3>
+      <p>A short form — every field optional — plus a box for anything in your own words. Speak naturally; the agents do the structuring.</p>
+    </div>
+    <div class="step">
+      <span class="step-num">02</span>
+      <h3>Watch the agents work</h3>
+      <p>Discovery, eligibility, documents, verification — live, in real time. No black box: you see every check and every reason.</p>
+    </div>
+    <div class="step">
+      <span class="step-num">03</span>
+      <h3>Apply with confidence</h3>
+      <p>Matched schemes with benefits, reasons, your missing documents, and the verified official portal to apply on.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section trust">
+  <div class="trust-grid">
+    <div><h3>Rules, not guesses</h3><p>Eligibility is decided by explainable rules evaluated in code. The AI helps you describe yourself — it never decides your fate.</p></div>
+    <div><h3>Links you can trust</h3><p>Every URL is curated from official government sources and re-verified with a dated stamp. LLMs never write links here.</p></div>
+    <div><h3>Indicative, honestly</h3><p>We tell you when a verdict depends on something you haven't confirmed — and exactly what document settles it.</p></div>
+  </div>
+</section>
+
+<footer class="landing-footer">
+  <span>AI Bureaucracy Navigator</span>
+  <span>Results are indicative — final eligibility is decided by the concerned department.</span>
+</footer>
+
 </body>
 </html>

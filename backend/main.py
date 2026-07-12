@@ -6,21 +6,23 @@ Then open http://localhost:8000
 """
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.agents.coordinator import run_pipeline
+from backend.auth import require_user, router as auth_router
 from backend.models import UserProfile
 
-app = FastAPI(title="AI Bureaucracy Navigator", version="0.1.0")
+app = FastAPI(title="AI Bureaucracy Navigator", version="0.2.0")
+app.include_router(auth_router)
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 
 
 @app.post("/api/navigate")
-async def navigate(profile: UserProfile):
-    """Run the agent pipeline; streams Server-Sent Events."""
+async def navigate(profile: UserProfile, user: dict = Depends(require_user)):
+    """Run the agent pipeline; streams Server-Sent Events. Sign-in required."""
     return StreamingResponse(
         run_pipeline(profile),
         media_type="text/event-stream",

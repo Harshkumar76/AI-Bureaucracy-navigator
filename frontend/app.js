@@ -10,6 +10,18 @@ const STATES = [
   "Uttarakhand","West Bengal","Delhi","Jammu & Kashmir","Ladakh","Puducherry",
   "Chandigarh","Andaman & Nicobar Islands","Dadra & Nagar Haveli and Daman & Diu","Lakshadweep"
 ];
+// ---- auth guard: this page requires a session ----
+fetch("/api/auth/me").then(async (r) => {
+  if (!r.ok) { location.href = "/signin.html"; return; }
+  const user = await r.json();
+  const chip = document.getElementById("user-chip");
+  chip.innerHTML = `<span>${user.name}</span><button id="signout-btn">Sign out</button>`;
+  document.getElementById("signout-btn").onclick = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    location.href = "/";
+  };
+});
+
 const stateSelect = document.getElementById("state-select");
 for (const s of STATES) {
   const o = document.createElement("option");
@@ -167,6 +179,7 @@ $("profile-form").addEventListener("submit", async (e) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(buildProfile(e.target)),
     });
+    if (res.status === 401) { location.href = "/signin.html"; return; }
     if (!res.ok) throw new Error(`Server error ${res.status}`);
 
     const reader = res.body.getReader();

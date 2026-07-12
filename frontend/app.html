@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Bureaucracy Navigator</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <div>
+      <div class="eyebrow">Multi-agent scheme discovery · India</div>
+      <h1>AI Bureaucracy Navigator</h1>
+      <p>Tell us about yourself — our agents find the government schemes you qualify for, with verified official links.</p>
+    </div>
+    <div class="user-chip" id="user-chip"></div>
+  </div>
+</header>
+
+<main>
+  <!-- ============ LEFT: profile form ============ -->
+  <section class="panel" id="form-panel">
+    <h2>Your profile</h2>
+    <p class="hint">Every field is optional — the more you fill, the more precise the results.</p>
+
+    <form id="profile-form">
+      <div class="grid">
+        <label>Age
+          <input type="number" name="age" min="0" max="120" placeholder="e.g. 21">
+        </label>
+        <label>Gender
+          <select name="gender">
+            <option value="">—</option>
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+            <option value="other">Other</option>
+          </select>
+        </label>
+        <label>State
+          <select name="state" id="state-select"><option value="">—</option></select>
+        </label>
+        <label>Residence
+          <select name="residence">
+            <option value="">—</option>
+            <option value="rural">Rural</option>
+            <option value="urban">Urban</option>
+          </select>
+        </label>
+        <label>Annual family income (₹)
+          <input type="number" name="annual_income" min="0" placeholder="e.g. 150000">
+        </label>
+        <label>Social category
+          <select name="category">
+            <option value="">—</option>
+            <option>General</option><option>OBC</option><option>SC</option>
+            <option>ST</option><option>EWS</option>
+          </select>
+        </label>
+        <label>Religion <span class="why" title="Only used to match notified minority-community schemes">?</span>
+          <select name="religion">
+            <option value="">Prefer not to say</option>
+            <option>Hindu</option><option>Muslim</option><option>Christian</option>
+            <option>Sikh</option><option>Buddhist</option><option>Jain</option>
+            <option>Parsi</option><option>Other</option>
+          </select>
+        </label>
+        <label>Occupation
+          <select name="occupation">
+            <option value="">—</option>
+            <option value="student">Student</option>
+            <option value="farmer">Farmer</option>
+            <option value="salaried">Salaried</option>
+            <option value="self_employed">Self-employed</option>
+            <option value="unemployed">Unemployed</option>
+            <option value="unorganised_worker">Unorganised worker</option>
+            <option value="artisan">Artisan / craftsperson</option>
+            <option value="other">Other</option>
+          </select>
+        </label>
+        <label>Education level
+          <select name="education_level">
+            <option value="">—</option>
+            <option value="below_10th">Below 10th</option>
+            <option value="10th_pass">10th pass</option>
+            <option value="12th_pass">12th pass</option>
+            <option value="ug">Undergraduate</option>
+            <option value="pg">Postgraduate</option>
+            <option value="not_studying">Not studying</option>
+          </select>
+        </label>
+        <label>Marital status
+          <select name="marital_status">
+            <option value="">—</option>
+            <option value="single">Single</option>
+            <option value="married">Married</option>
+            <option value="widowed">Widowed</option>
+            <option value="divorced">Divorced</option>
+          </select>
+        </label>
+        <label>Disability % (if any)
+          <input type="number" name="disability_pct" min="0" max="100" placeholder="e.g. 40">
+        </label>
+      </div>
+
+      <fieldset>
+        <legend>Household</legend>
+        <label class="check"><input type="checkbox" name="has_bpl_card"> BPL / priority ration card</label>
+        <label class="check"><input type="checkbox" name="owns_cultivable_land"> Family owns cultivable land</label>
+        <label class="check"><input type="checkbox" name="owns_pucca_house"> Family owns a pucca house</label>
+        <label class="check"><input type="checkbox" name="has_girl_child_under_10"> Girl child under 10 in family</label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Documents I already have</legend>
+        <div class="doc-grid" id="doc-checkboxes">
+          <label class="check"><input type="checkbox" value="Aadhaar card"> Aadhaar card</label>
+          <label class="check"><input type="checkbox" value="Income certificate"> Income certificate</label>
+          <label class="check"><input type="checkbox" value="Caste certificate"> Caste certificate</label>
+          <label class="check"><input type="checkbox" value="Bank passbook"> Bank passbook</label>
+          <label class="check"><input type="checkbox" value="Ration card"> Ration card</label>
+          <label class="check"><input type="checkbox" value="Land ownership records"> Land records</label>
+        </div>
+      </fieldset>
+
+      <label>Anything else we should know? <span class="hint-inline">(optional — e.g. "my father passed away last year", "I scored 92% in class 12")</span>
+        <textarea name="extra_info" rows="3" placeholder="Describe your situation in your own words..."></textarea>
+      </label>
+
+      <button type="submit" id="submit-btn">🚀 Find my schemes</button>
+    </form>
+  </section>
+
+  <!-- ============ RIGHT: agents + findings ============ -->
+  <section class="panel" id="results-panel">
+    <div id="agent-panel" class="hidden">
+      <h2>Agents at work</h2>
+      <div id="agent-list"></div>
+    </div>
+
+    <div id="findings" class="hidden">
+      <h2>Your results</h2>
+      <div id="summary-box"></div>
+      <div id="finding-cards"></div>
+      <div id="checklist-box"></div>
+      <p class="disclaimer">⚠ Results are indicative, based on what you told us. Final eligibility
+        depends on the documents you submit — always confirm on the official portal linked above.</p>
+    </div>
+
+    <div id="placeholder">
+      <p>👋 Fill in whatever you know and hit <b>Find my schemes</b>.<br>
+      You'll see each agent work in real time, then your matched schemes with official links.</p>
+    </div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

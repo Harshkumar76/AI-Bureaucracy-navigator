@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in — AI Bureaucracy Navigator</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="landing">
+
+<nav class="landing-nav">
+  <a class="logo" href="/">Bureaucracy&nbsp;Navigator</a>
+</nav>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button id="tab-signin" class="active">Sign in</button>
+      <button id="tab-signup">Create account</button>
+    </div>
+
+    <form id="auth-form">
+      <label id="name-field" class="hidden">Name
+        <input type="text" name="name" placeholder="Your name" autocomplete="name">
+      </label>
+      <label>Email
+        <input type="email" name="email" placeholder="you@example.com" required autocomplete="email">
+      </label>
+      <label>Password
+        <input type="password" name="password" placeholder="At least 8 characters" required autocomplete="current-password">
+      </label>
+      <div id="auth-error" class="auth-error hidden"></div>
+      <button type="submit" class="btn btn-primary btn-lg" id="auth-submit">Sign in</button>
+    </form>
+
+    <p class="auth-hint">Your profile answers stay on this server — nothing is shared with any scheme portal.</p>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let mode = location.hash === "#signup" ? "signup" : "signin";
+
+function setMode(m) {
+  mode = m;
+  $("tab-signin").classList.toggle("active", m === "signin");
+  $("tab-signup").classList.toggle("active", m === "signup");
+  $("name-field").classList.toggle("hidden", m === "signin");
+  $("auth-submit").textContent = m === "signin" ? "Sign in" : "Create account";
+  $("auth-error").classList.add("hidden");
+}
+$("tab-signin").onclick = () => setMode("signin");
+$("tab-signup").onclick = () => setMode("signup");
+setMode(mode);
+
+// already signed in? straight to the app
+fetch("/api/auth/me").then(r => { if (r.ok) location.href = "/app.html"; });
+
+$("auth-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const btn = $("auth-submit");
+  btn.disabled = true;
+  try {
+    const res = await fetch(`/api/auth/${mode === "signin" ? "login" : "register"}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: fd.get("email"),
+        password: fd.get("password"),
+        name: fd.get("name") || undefined,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `Error ${res.status}`);
+    }
+    location.href = "/app.html";
+  } catch (err) {
+    const box = $("auth-error");
+    box.textContent = err.message;
+    box.classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
