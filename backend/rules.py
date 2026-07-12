@@ -138,6 +138,50 @@ def _check(profile, key: str, expected) -> Tuple[Optional[bool], str, str]:
     return None, f"has an unrecognised condition '{key}'", key
 
 
+def describe_rules(rules: dict) -> list:
+    """Human-readable eligibility criteria for a scheme's detail page,
+    written without reference to any user profile."""
+    out = []
+    min_age, max_age = rules.get("min_age"), rules.get("max_age")
+    if min_age is not None and max_age is not None:
+        out.append(f"Age between {min_age} and {max_age} years")
+    elif min_age is not None:
+        out.append(f"Age {min_age} years or above")
+    elif max_age is not None:
+        out.append(f"Age up to {max_age} years")
+
+    for key, expected in rules.items():
+        if key in ("min_age", "max_age"):
+            continue
+        if key == "max_income":
+            out.append(f"Annual family income up to {_inr(expected)}")
+        elif key == "gender":
+            out.append(f"For {expected} applicants")
+        elif key == "category_in":
+            out.append(f"For {'/'.join(expected)} category")
+        elif key == "occupation_in":
+            out.append("For " + "/".join(e.replace("_", " ") for e in expected))
+        elif key == "residence":
+            out.append(f"For residents of {expected} areas")
+        elif key == "education_in":
+            out.append("Studying at " + "/".join(EDUCATION_LABELS.get(e, e) for e in expected) + " level")
+        elif key == "religion_in":
+            out.append(f"For notified minority communities ({', '.join(expected)})")
+        elif key == "min_disability_pct":
+            out.append(f"Benchmark disability of {expected}% or more")
+        elif key == "marital_status_in":
+            out.append(f"For {'/'.join(expected)} applicants")
+        elif key == "requires_bpl_card":
+            out.append("Household holds a BPL / priority ration card")
+        elif key == "requires_cultivable_land":
+            out.append("Family owns cultivable land")
+        elif key == "requires_no_pucca_house":
+            out.append("Family does not own a pucca house")
+        elif key == "requires_girl_child_under_10":
+            out.append("Family has a girl child below 10 years")
+    return out
+
+
 def evaluate(profile, rules: dict):
     """-> (status, reasons[], unknown_fields[])"""
     reasons, unknowns = [], []

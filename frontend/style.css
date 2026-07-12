@@ -283,6 +283,49 @@ button[type=submit]:disabled { background: var(--primary-soft); color: var(--mut
 }
 .auth-hint { font-size: 12px; color: var(--muted-fg); text-align: center; margin: 18px 0 0; line-height: 1.5; }
 
+/* ---- scheme detail page ---- */
+.scheme-link { color: inherit; text-decoration: none; }
+.scheme-link:hover { color: var(--primary-soft-fg); }
+.detail-wrap { max-width: 760px; margin: 0 auto; padding: 44px 24px 80px; }
+.detail-loading { color: var(--muted-fg); text-align: center; padding: 80px 0; }
+.detail-head { margin-bottom: 8px; }
+.chips { display: flex; gap: 8px; margin-bottom: 14px; }
+.chip {
+  font-family: var(--mono); font-size: 10.5px; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--primary-soft-fg);
+  background: var(--primary-soft); border-radius: 999px; padding: 4px 12px;
+}
+.detail-head h1 { font-size: 34px; line-height: 1.15; margin: 0 0 12px; }
+.detail-benefit { font-size: 17px; font-weight: 500; color: var(--primary-soft-fg); }
+.detail-section {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 1.8); padding: 22px 24px; margin-top: 16px;
+}
+.detail-section .eyebrow { margin-bottom: 12px; }
+.detail-desc { font-size: 14.5px; line-height: 1.65; color: var(--foreground); margin: 0 0 14px; }
+.detail-desc:last-child { margin-bottom: 0; }
+.criteria { margin: 0; padding: 0; list-style: none; }
+.criteria li {
+  font-size: 14px; padding: 9px 0 9px 26px; position: relative;
+  border-bottom: 1px solid var(--border);
+}
+.criteria li:last-child { border-bottom: none; }
+.criteria li::before { content: "→"; position: absolute; left: 2px; color: var(--primary); }
+.detail-fineprint { font-size: 12px; color: var(--muted-fg); margin: 12px 0 0; }
+.doc-list { margin: 0; padding: 0; list-style: none; }
+.doc-list li {
+  font-size: 14px; padding: 9px 0; border-bottom: 1px solid var(--border);
+  display: flex; align-items: baseline; gap: 10px;
+}
+.doc-list li:last-child { border-bottom: none; }
+.doc-mark { color: var(--muted-fg); }
+.doc-mark.have { color: var(--ok); }
+.doc-mark.miss { color: var(--no); }
+.doc-note { font-family: var(--mono); font-size: 10.5px; color: var(--muted-fg); }
+.your-verdict { border-color: oklch(0.62 0.155 336 / 35%); }
+.verdict-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.verdict-note { font-size: 12.5px; color: var(--muted-fg); }
+
 /* ---- app header user chip ---- */
 .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
 .user-chip {

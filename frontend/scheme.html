@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scheme details — AI Bureaucracy Navigator</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="landing">
+
+<nav class="landing-nav">
+  <a class="logo" href="/">Bureaucracy&nbsp;Navigator</a>
+  <div class="nav-links">
+    <a href="/app.html">← Back to my results</a>
+  </div>
+</nav>
+
+<div class="detail-wrap" id="detail">
+  <p class="detail-loading">Loading scheme…</p>
+</div>
+
+<script>
+const id = new URLSearchParams(location.search).get("id");
+const box = document.getElementById("detail");
+
+// the user's own verdict, if they arrived from a results run
+const finding = (JSON.parse(sessionStorage.getItem("nav_findings") || "[]"))
+  .find(f => f.scheme_id === id);
+
+function verdictSection() {
+  if (!finding) return "";
+  const label = { eligible: "Eligible", possible: "Possibly eligible", ineligible: "Not eligible" }[finding.status];
+  const docsHave = new Set(finding.documents.filter(d => !finding.documents_missing.includes(d)));
+  return `
+  <section class="detail-section your-verdict">
+    <div class="eyebrow">Your result</div>
+    <div class="verdict-head">
+      <span class="pill ${finding.status}">${label}</span>
+      <span class="verdict-note">based on the profile from your last run</span>
+    </div>
+    <ul class="reasons">${finding.reasons.map(r => `<li>${r}</li>`).join("")}</ul>
+  </section>`;
+}
+
+async function render() {
+  if (!id) { box.innerHTML = '<p class="detail-loading">No scheme selected.</p>'; return; }
+  const res = await fetch(`/api/schemes/${encodeURIComponent(id)}`);
+  if (!res.ok) { box.innerHTML = '<p class="detail-loading">Scheme not found.</p>'; return; }
+  const s = await res.json();
+  document.title = `${s.name} — AI Bureaucracy Navigator`;
+
+  const missing = new Set(finding ? finding.documents_missing : []);
+  const docRow = (d) => {
+    if (!finding) return `<li><span class="doc-mark">•</span>${d}</li>`;
+    return missing.has(d)
+      ? `<li><span class="doc-mark miss">✗</span>${d} <span class="doc-note">you marked this as missing</span></li>`
+      : `<li><span class="doc-mark have">✓</span>${d} <span class="doc-note">you have this</span></li>`;
+  };
+
+  box.innerHTML = `
+    <div class="detail-head">
+      <div class="chips">
+        <span class="chip">${s.category}</span>
+        <span class="chip">${s.level === "central" ? "Central government" : s.state}</span>
+      </div>
+      <h1>${s.name}</h1>
+      <div class="detail-benefit">${s.benefit}</div>
+    </div>
+
+    ${verdictSection()}
+
+    <section class="detail-section">
+      <div class="eyebrow">About this scheme</div>
+      <p class="detail-desc">${s.description}</p>
+    </section>
+
+    <section class="detail-section">
+      <div class="eyebrow">Who is eligible</div>
+      <ul class="criteria">${s.criteria.map(c => `<li>${c}</li>`).join("")}</ul>
+      <p class="detail-fineprint">Criteria are indicative — the concerned department applies the full official rules at verification.</p>
+    </section>
+
+    <section class="detail-section">
+      <div class="eyebrow">Documents required</div>
+      <ul class="doc-list">${s.documents.map(docRow).join("")}</ul>
+    </section>
+
+    <section class="detail-section">
+      <div class="eyebrow">How to apply</div>
+      <p class="detail-desc">${s.apply_mode}</p>
+      <a class="btn btn-primary btn-lg" href="${s.official_url}" target="_blank" rel="noopener">
+        Open official portal ↗
+      </a>
+      <div class="source" style="margin-top:16px">
+        <span>${new URL(s.official_url).hostname}</span>
+        <span>link verified ${s.last_verified}</span>
+      </div>
+    </section>
+  `;
+}
+render();
+</script>
+</body>
+</html>

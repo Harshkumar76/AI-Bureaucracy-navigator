@@ -84,6 +84,8 @@ function agentEvent(ev) {
 
 /* ---- findings ---- */
 function renderFindings(data) {
+  // detail pages read the user's verdicts from here
+  sessionStorage.setItem("nav_findings", JSON.stringify(data.findings));
   $("summary-box").textContent = data.summary;
 
   const cards = $("finding-cards");
@@ -108,7 +110,7 @@ function renderFindings(data) {
       </div>
       <div class="card-main">
         <div class="card-top">
-          <h3>${f.name}</h3>
+          <h3><a class="scheme-link" href="scheme.html?id=${encodeURIComponent(f.scheme_id)}">${f.name}</a></h3>
           <span class="pill ${f.status}">${statusLabel}</span>
         </div>
         <div class="benefit">${f.benefit}</div>
@@ -117,7 +119,7 @@ function renderFindings(data) {
         <div class="source">
           <span><a href="${f.official_url}" target="_blank" rel="noopener">${new URL(f.official_url).hostname}</a>
             — ${f.apply_mode}${linkNote}</span>
-          <span>verified ${f.last_verified}</span>
+          <span><a href="scheme.html?id=${encodeURIComponent(f.scheme_id)}">details →</a> · verified ${f.last_verified}</span>
         </div>
       </div>`;
     return card;
