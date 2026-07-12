@@ -111,7 +111,10 @@ function renderFindings(data) {
       <div class="card-main">
         <div class="card-top">
           <h3><a class="scheme-link" href="scheme.html?id=${encodeURIComponent(f.scheme_id)}">${f.name}</a></h3>
-          <span class="pill ${f.status}">${statusLabel}</span>
+          <div class="card-actions">
+            <span class="pill ${f.status}">${statusLabel}</span>
+            <a class="btn-details" href="scheme.html?id=${encodeURIComponent(f.scheme_id)}">View details →</a>
+          </div>
         </div>
         <div class="benefit">${f.benefit}</div>
         <ul class="reasons">${f.reasons.map(r => `<li>${r}</li>`).join("")}</ul>
@@ -119,7 +122,7 @@ function renderFindings(data) {
         <div class="source">
           <span><a href="${f.official_url}" target="_blank" rel="noopener">${new URL(f.official_url).hostname}</a>
             — ${f.apply_mode}${linkNote}</span>
-          <span><a href="scheme.html?id=${encodeURIComponent(f.scheme_id)}">details →</a> · verified ${f.last_verified}</span>
+          <span>verified ${f.last_verified}</span>
         </div>
       </div>`;
     return card;
