@@ -1,35 +1,85 @@
 # 🇮🇳 AI Bureaucracy Navigator
 
-A multi-agent AI platform that helps users **discover, understand, apply for, and track** government schemes, scholarships, and benefits.
+**A multi-agent AI platform that helps people discover, understand, and apply for Indian government schemes, scholarships, and benefits — with explainable eligibility verdicts and links you can trust.**
 
 > **Discover → Check Eligibility → Prepare Documents → Apply → Track → Resolve**
 
-This MVP covers the first three stages end-to-end: a user fills a simple profile form (plus an optional free-text note), watches specialized agents coordinate in real time, and gets matched schemes with **explainable eligibility verdicts, a consolidated document checklist, and verified official links**.
+Describe your situation once. Five specialized agents find what you qualify for, explain *why*, build your document checklist, and hand you the verified official portal to apply on.
 
-## Demo flow
+![Landing page](docs/landing.png)
 
-1. **Profile form** — every field optional; a free-text box catches anything the form misses ("my father passed away last year").
-2. **Agents work live** — the UI streams each agent's progress over Server-Sent Events:
-   - 📝 **Intake Agent** — merges form fields + LLM-extracted facts from the free-text note
-   - 🔍 **Discovery Agent** — pulls candidates from the indexed scheme database
-   - ⚖️ **Eligibility Agent** — runs a **deterministic rule engine** (no LLM guessing) → eligible / possibly eligible / not eligible, with reasons
-   - 📄 **Document Agent** — builds a deduplicated document checklist, marks what you already have
-   - 🔗 **Verification Agent** — every link comes from the curated database with a last-verified date; optional live link-check
-3. **Findings** — one card per scheme: benefit, verdict **with reasons**, required documents, official portal link + provenance.
+## How the agents work
+
+A user submits a profile form (every field optional) plus a free-text note. The Coordinator runs five agents in sequence, streaming each agent's live progress to the browser over Server-Sent Events:
+
+```mermaid
+flowchart TD
+    U["👤 User<br/>form + free-text note"] -->|"POST /api/navigate"| C["🎯 Coordinator<br/>orchestrates pipeline, streams SSE"]
+
+    C --> A1["📝 Intake Agent<br/>merges form fields with facts the LLM<br/>mines from the free-text note"]
+    A1 --> P[("Structured profile<br/>(nullable fields)")]
+
+    P --> A2["🔍 Discovery Agent<br/>filters the indexed scheme database<br/>by state applicability"]
+    DB[("schemes.json<br/>16 schemes, rules,<br/>documents, official URLs")] --> A2
+
+    A2 -->|"candidate schemes"| A3["⚖️ Eligibility Agent<br/>deterministic rule engine —<br/>no LLM guessing"]
+    A3 -->|"verdicts + reasons"| A4["📄 Document Agent<br/>consolidated checklist,<br/>marks what you already have"]
+    A4 --> A5["🔗 Verification Agent<br/>attaches provenance: official URL +<br/>last-verified date; optional live check"]
+
+    A5 --> F["📋 Findings<br/>verdict cards + reasons + checklist<br/>+ AI summary"]
+    F --> U
+
+    C -.->|"live agent progress (SSE)"| U
+```
+
+### How a verdict is decided
+
+The LLM **never** decides eligibility. Each scheme's rules are structured JSON evaluated in code — consistent, explainable, and free to run. Unknown answers are never treated as "no":
+
+```mermaid
+flowchart LR
+    R["Scheme rules<br/>(structured JSON)"] --> E{"Evaluate each condition<br/>against the profile"}
+    E -->|"all conditions pass"| EL["✅ Eligible<br/>with the reasons"]
+    E -->|"any condition fails"| IN["❌ Not eligible<br/>with the exact rule that failed"]
+    E -->|"any field unknown"| PO["❓ Possibly eligible<br/>+ the question that resolves it"]
+```
+
+### Where the LLM *is* used (optional, degrades gracefully)
+
+| Task | Without API key | With API key (any OpenAI-compatible endpoint) |
+|---|---|---|
+| Free-text note → profile fields | note is saved, skipped | "*19yo girl from a farming family, 1.5L income*" → 8 structured fields |
+| Results summary | deterministic template | warm 3-sentence natural summary |
+| Eligibility decisions | **rule engine — always** | **rule engine — always** |
+| Links shown to users | **curated DB — always** | **curated DB — always** |
+
+## Screenshots
+
+| Results with live agent panel | Scheme detail page |
+|---|---|
+| ![Results](docs/results.png) | ![Scheme detail](docs/scheme-detail.png) |
+
+## Design principles
+
+1. **Rules, not guesses.** Eligibility comes from a deterministic rule engine (`backend/rules.py`). Every verdict carries human-readable reasons; nothing is a black box.
+2. **The LLM never writes URLs.** Links come from a curated database with a `last_verified` date stamped by `scripts/check_links.py` — hallucinated government links are the fastest way to lose user trust.
+3. **Unknown ≠ ineligible.** A blank profile field makes a scheme "possibly eligible" and tells the user exactly which answer would settle it.
+4. **Honest by default.** Results are labeled indicative; final eligibility always rests with the concerned department against submitted documents.
 
 ## Architecture
 
 ```
 frontend/  (vanilla HTML/CSS/JS, dark theme)
-    index.html              landing page
-    signin.html             sign in / create account
+    index.html              landing page (public)
+    signin.html             sign in / create account (public)
     app.html + app.js       the navigator app (session required)
-    │  POST /api/navigate  →  text/event-stream
+    scheme.html             per-scheme detail page
+    │  POST /api/navigate  →  text/event-stream (SSE)
 backend/
     main.py                 FastAPI app (serves frontend + API)
     auth.py                 email/password auth — SQLite + PBKDF2 + cookie sessions
     models.py               UserProfile / Finding (pydantic)
-    rules.py                deterministic eligibility rule engine
+    rules.py                deterministic eligibility rule engine + criteria describer
     llm.py                  optional OpenAI-compatible LLM layer
     agents/
         coordinator.py      pipeline orchestration + SSE
@@ -38,16 +88,20 @@ backend/
 scripts/check_links.py      link checker (keeps "verified <date>" honest)
 ```
 
-**Auth:** email/password with HttpOnly cookie sessions (7-day expiry). Users live in
-`backend/data/users.db` (SQLite, gitignored). `/api/navigate` requires a session;
-the landing page and sign-in are public. No external auth dependencies — swap in
-OAuth later without touching the rest of the app.
+## API
 
-**Design principles**
+| Method | Endpoint | Auth | Purpose |
+|---|---|---|---|
+| POST | `/api/navigate` | session | run the agent pipeline (SSE stream) |
+| GET | `/api/schemes` | public | scheme catalogue |
+| GET | `/api/schemes/{id}` | public | full scheme record + plain-language criteria |
+| POST | `/api/auth/register` | — | create account, sets session cookie |
+| POST | `/api/auth/login` | — | sign in, sets session cookie |
+| POST | `/api/auth/logout` | session | end session |
+| GET | `/api/auth/me` | session | current user |
+| GET | `/api/health` | public | liveness |
 
-- **The LLM never decides eligibility.** Scheme rules are structured JSON evaluated in code — consistent, explainable, free. The LLM only mines free text into profile fields and writes the results summary.
-- **The LLM never writes URLs.** Links come from the curated database with `last_verified` provenance; `scripts/check_links.py` keeps them honest.
-- **Unknown ≠ ineligible.** Blank profile fields make a scheme "possibly eligible" with the exact question that would resolve it.
+**Auth:** email/password with HttpOnly cookie sessions (7-day expiry). Users live in `backend/data/users.db` (SQLite, gitignored). PBKDF2-SHA256 with per-user salts; no external auth dependencies — swap in OAuth later without touching the rest of the app.
 
 ## Quick start
 
@@ -60,10 +114,10 @@ uvicorn backend.main:app --reload
 Works fully offline with no API key. Optional extras:
 
 ```bash
-# enable free-text extraction + AI summary (any OpenAI-compatible endpoint)
-export LLM_API_KEY=sk-...
-export LLM_BASE_URL=https://api.openai.com/v1   # default
-export LLM_MODEL=gpt-4o-mini                    # default
+# enable free-text extraction + AI summary (any OpenAI-compatible endpoint, e.g. Groq)
+export LLM_API_KEY=...
+export LLM_BASE_URL=https://api.groq.com/openai/v1
+export LLM_MODEL=llama-3.3-70b-versatile
 
 # live-check official links during the Verification stage
 export VERIFY_LINKS=1
@@ -75,15 +129,31 @@ Verify scheme links (run before demos; `--stamp` updates the verified dates):
 python scripts/check_links.py --stamp
 ```
 
+## Scheme database
+
+16 central-government schemes across Education, Agriculture, Health, Housing, Pension, Insurance, Welfare, Livelihood, Savings, and Skill Development — including PM-KISAN, NSP scholarships (CSSS, Post-Matric SC/Minority, NMMSS), Ayushman Bharat PM-JAY, PMAY-Gramin, Ujjwala 2.0, Atal Pension Yojana, PM Vishwakarma, Sukanya Samriddhi, and NSAP pensions. Each record carries structured eligibility rules, required documents, apply route, and a live-verified official URL. The schema already supports state-level schemes (`"state": "Karnataka"`).
+
+## Tech stack
+
+| Layer | Choice | Why |
+|---|---|---|
+| Backend | FastAPI (Python) | async SSE streaming, pydantic validation |
+| Agents | custom lightweight pipeline | deterministic orchestration, zero token cost for rules |
+| LLM | any OpenAI-compatible endpoint | Groq / OpenAI / local — swappable via env vars |
+| Data | JSON seed DB → SQLite (users) | zero-setup MVP; Postgres+pgvector is the upgrade path |
+| Frontend | vanilla HTML/CSS/JS | no build step, SSE via fetch streams |
+
 ## Roadmap
 
+- [ ] One-tap gap filling: answer a "possibly eligible" question and re-run instantly
+- [ ] Voice intake via Whisper (speak your situation in any language)
 - [ ] Vector search (pgvector) over scheme descriptions for fuzzy discovery
-- [ ] Ingestion pipeline: crawl myScheme / NSP / department portals, LLM-extract rules JSON at ingestion time
+- [ ] Ingestion pipeline: crawl myScheme / NSP, LLM-extract rules JSON at ingestion, human review queue
 - [ ] State-specific scheme packs
-- [ ] Application guidance + deadline tracking (Postgres + cron)
-- [ ] DigiLocker integration — auto-verify issued documents, catch word-vs-certificate mismatches before applying
-- [ ] Resolution agent — RTI templates, grievance-portal guidance
-- [ ] CrewAI Flows for the long-running Apply → Track → Resolve journey
+- [ ] Deadline tracking + reminders (Postgres + cron)
+- [ ] DigiLocker integration — auto-verify issued documents, catch income/certificate mismatches before applying
+- [ ] Resolution agent — RTI templates, grievance-portal (CPGRAMS) guidance
+- [ ] WhatsApp bot interface
 
 ## Disclaimer
 
