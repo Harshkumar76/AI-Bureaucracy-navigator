@@ -15,8 +15,14 @@ fetch("/api/auth/me").then(async (r) => {
   if (!r.ok) { location.href = "/signin.html"; return; }
   const user = await r.json();
   const chip = document.getElementById("user-chip");
-  chip.innerHTML = `<span>${user.name}</span><button id="signout-btn">Sign out</button>`;
-  document.getElementById("signout-btn").onclick = async () => {
+  chip.replaceChildren();
+  const name = document.createElement("span");
+  name.textContent = user.name;
+  const signout = document.createElement("button");
+  signout.id = "signout-btn";
+  signout.textContent = "Sign out";
+  chip.append(name, signout);
+  signout.onclick = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     location.href = "/";
   };

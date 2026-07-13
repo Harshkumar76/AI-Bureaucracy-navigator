@@ -129,6 +129,17 @@ Verify scheme links (run before demos; `--stamp` updates the verified dates):
 python scripts/check_links.py --stamp
 ```
 
+## JWT configuration
+
+Authentication issues a signed JWT named `access_token` in an HttpOnly, SameSite cookie (seven-day expiry). API clients can instead send `Authorization: Bearer <token>`. Logout revokes the token ID until expiry.
+
+For production, configure a stable, high-entropy secret and HTTPS cookies:
+
+```bash
+export JWT_SECRET="replace-with-a-long-random-secret"
+export COOKIE_SECURE=true
+```
+
 ## Scheme database
 
 16 central-government schemes across Education, Agriculture, Health, Housing, Pension, Insurance, Welfare, Livelihood, Savings, and Skill Development — including PM-KISAN, NSP scholarships (CSSS, Post-Matric SC/Minority, NMMSS), Ayushman Bharat PM-JAY, PMAY-Gramin, Ujjwala 2.0, Atal Pension Yojana, PM Vishwakarma, Sukanya Samriddhi, and NSAP pensions. Each record carries structured eligibility rules, required documents, apply route, and a live-verified official URL. The schema already supports state-level schemes (`"state": "Karnataka"`).
