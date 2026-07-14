@@ -4,7 +4,6 @@ Run from the repo root:
     uvicorn backend.main:app --reload
 Then open http://localhost:8000
 """
-import json
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -13,33 +12,37 @@ from fastapi.staticfiles import StaticFiles
 
 from backend.agents.coordinator import run_pipeline
 from backend.auth import require_user, router as auth_router
+from backend.database import db_connection, init_db
 from backend.models import UserProfile
 from backend.rules import describe_rules
 
-app = FastAPI(title="AI Bureaucracy Navigator", version="0.2.0")
+app = FastAPI(title="AI Bureaucracy Navigator", version="0.3.0")
 app.include_router(auth_router)
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
-SCHEMES_FILE = Path(__file__).resolve().parent / "data" / "schemes.json"
-
-
-def _load_schemes() -> list:
-    return json.loads(SCHEMES_FILE.read_text(encoding="utf-8"))
+@app.on_event("startup")
+def initialise_database():
+    init_db()
 
 
 @app.get("/api/schemes")
 async def list_schemes():
     """Public scheme catalogue (summary fields only)."""
-    keep = ("id", "name", "category", "level", "benefit", "official_url", "last_verified")
-    return [{k: s[k] for k in keep} for s in _load_schemes()]
+    with db_connection() as conn, conn.cursor() as cur:
+        cur.execute("""SELECT id, name, category, level, benefit, official_url, last_verified
+                       FROM schemes ORDER BY name""")
+        return cur.fetchall()
 
 
 @app.get("/api/schemes/{scheme_id}")
 async def scheme_detail(scheme_id: str):
     """Full record for one scheme + human-readable eligibility criteria."""
-    for s in _load_schemes():
-        if s["id"] == scheme_id:
-            return {**s, "criteria": describe_rules(s["rules"])}
+    with db_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT data FROM schemes WHERE id = %s", (scheme_id,))
+        row = cur.fetchone()
+        if row:
+            scheme = row["data"]
+            return {**scheme, "criteria": describe_rules(scheme["rules"])}
     raise HTTPException(404, "Scheme not found")
 
 

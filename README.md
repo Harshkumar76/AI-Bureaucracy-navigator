@@ -20,7 +20,7 @@ flowchart TD
     A1 --> P[("Structured profile<br/>(nullable fields)")]
 
     P --> A2["🔍 Discovery Agent<br/>filters the indexed scheme database<br/>by state applicability"]
-    DB[("schemes.json<br/>16 schemes, rules,<br/>documents, official URLs")] --> A2
+    DB[("PostgreSQL<br/>16 schemes, rules,<br/>documents, official URLs")] --> A2
 
     A2 -->|"candidate schemes"| A3["⚖️ Eligibility Agent<br/>deterministic rule engine —<br/>no LLM guessing"]
     A3 -->|"verdicts + reasons"| A4["📄 Document Agent<br/>consolidated checklist,<br/>marks what you already have"]
@@ -77,14 +77,15 @@ frontend/  (vanilla HTML/CSS/JS, dark theme)
     │  POST /api/navigate  →  text/event-stream (SSE)
 backend/
     main.py                 FastAPI app (serves frontend + API)
-    auth.py                 email/password auth — SQLite + PBKDF2 + cookie sessions
+    auth.py                 email/password auth — PostgreSQL + PBKDF2 + JWT cookies
     models.py               UserProfile / Finding (pydantic)
     rules.py                deterministic eligibility rule engine + criteria describer
     llm.py                  optional OpenAI-compatible LLM layer
     agents/
         coordinator.py      pipeline orchestration + SSE
         intake.py  discovery.py  eligibility.py  documents.py  verification.py
-    data/schemes.json       seed DB: 16 central schemes with rules + official URLs
+    database.py             PostgreSQL schema and connection helpers
+    data/schemes.json       one-time import source for the initial scheme catalogue
 scripts/check_links.py      link checker (keeps "verified <date>" honest)
 ```
 
@@ -95,13 +96,13 @@ scripts/check_links.py      link checker (keeps "verified <date>" honest)
 | POST | `/api/navigate` | session | run the agent pipeline (SSE stream) |
 | GET | `/api/schemes` | public | scheme catalogue |
 | GET | `/api/schemes/{id}` | public | full scheme record + plain-language criteria |
-| POST | `/api/auth/register` | — | create account, sets session cookie |
-| POST | `/api/auth/login` | — | sign in, sets session cookie |
+| POST | `/api/auth/register` | — | create account, sets JWT cookie |
+| POST | `/api/auth/login` | — | sign in, sets JWT cookie |
 | POST | `/api/auth/logout` | session | end session |
 | GET | `/api/auth/me` | session | current user |
 | GET | `/api/health` | public | liveness |
 
-**Auth:** email/password with HttpOnly cookie sessions (7-day expiry). Users live in `backend/data/users.db` (SQLite, gitignored). PBKDF2-SHA256 with per-user salts; no external auth dependencies — swap in OAuth later without touching the rest of the app.
+**Auth:** email/password with signed JWTs in an HttpOnly, SameSite cookie (7-day expiry). Users and revoked-token records live in PostgreSQL. PBKDF2-SHA256 is used with per-user salts; API clients can also use `Authorization: Bearer <token>`.
 
 ## Quick start
 
@@ -140,6 +141,27 @@ export JWT_SECRET="replace-with-a-long-random-secret"
 export COOKIE_SECURE=true
 ```
 
+## PostgreSQL setup
+
+The application stores user accounts, revoked JWTs, and scheme records in PostgreSQL. `backend/data/schemes.json` is retained only as the one-time import source; the running application never reads it.
+
+For local development, start PostgreSQL with Docker:
+
+```bash
+docker compose up -d postgres
+```
+
+Configure the connection and import the catalogue:
+
+```bash
+# PowerShell
+$env:DATABASE_URL = "postgresql://navigator:navigator@localhost:5432/navigator"
+python scripts/seed_schemes.py
+uvicorn backend.main:app --reload
+```
+
+For a deployed database, set `DATABASE_URL` to its PostgreSQL URL and run `python scripts/seed_schemes.py` during deployment. The seed command is idempotent: it inserts new schemes and updates existing IDs.
+
 ## Scheme database
 
 16 central-government schemes across Education, Agriculture, Health, Housing, Pension, Insurance, Welfare, Livelihood, Savings, and Skill Development — including PM-KISAN, NSP scholarships (CSSS, Post-Matric SC/Minority, NMMSS), Ayushman Bharat PM-JAY, PMAY-Gramin, Ujjwala 2.0, Atal Pension Yojana, PM Vishwakarma, Sukanya Samriddhi, and NSAP pensions. Each record carries structured eligibility rules, required documents, apply route, and a live-verified official URL. The schema already supports state-level schemes (`"state": "Karnataka"`).
@@ -151,7 +173,7 @@ export COOKIE_SECURE=true
 | Backend | FastAPI (Python) | async SSE streaming, pydantic validation |
 | Agents | custom lightweight pipeline | deterministic orchestration, zero token cost for rules |
 | LLM | any OpenAI-compatible endpoint | Groq / OpenAI / local — swappable via env vars |
-| Data | JSON seed DB → SQLite (users) | zero-setup MVP; Postgres+pgvector is the upgrade path |
+| Data | PostgreSQL | durable user, token-revocation, and scheme storage |
 | Frontend | vanilla HTML/CSS/JS | no build step, SSE via fetch streams |
 
 ## Roadmap
