@@ -155,7 +155,7 @@ Configure the connection and import the catalogue:
 
 ```bash
 # PowerShell
-$env:DATABASE_URL = "postgresql://navigator:navigator@localhost:5432/navigator"
+$env:DATABASE_URL = "postgresql://navigator:navigator_dev_password@localhost:5432/navigator"
 python scripts/seed_schemes.py
 uvicorn backend.main:app --reload
 ```
