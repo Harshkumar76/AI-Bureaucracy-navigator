@@ -1,18 +1,12 @@
 """Models for AI Bureaucracy Navigator.
 
-- Pydantic models: used for request/response validation
-- SQLAlchemy models: used for PostgreSQL storage
+Pydantic models used for request/response validation. Scheme records are
+stored as plain PostgreSQL rows (see backend/database.py) — no ORM layer.
 """
 
 from typing import Optional, List
 from pydantic import BaseModel, Field
-from sqlalchemy import Column, Integer, String, Text, DateTime
-from sqlalchemy.dialects.postgresql import JSONB
-from backend.database import Base
 
-# ============================================================
-# Pydantic models (unchanged, used in API)
-# ============================================================
 
 class UserProfile(BaseModel):
     age: Optional[int] = None
@@ -47,21 +41,3 @@ class Finding(BaseModel):
     apply_mode: str
     last_verified: str
     link_alive: Optional[bool] = None           # set by Verification Agent when live-checking
-
-# ============================================================
-# SQLAlchemy models (NEW, used for PostgreSQL storage)
-# ============================================================
-
-class Scheme(Base):
-    __tablename__ = "schemes"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    category = Column(String, nullable=True)
-    level = Column(String, nullable=True)
-    benefit = Column(Text, nullable=True)
-    official_url = Column(String, nullable=True)
-    last_verified = Column(DateTime, nullable=True)
-
-    # Rules stored as JSON (same as in schemes.json)
-    rules = Column(JSONB, nullable=True)

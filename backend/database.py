@@ -1,29 +1,59 @@
+"""PostgreSQL connection and schema helpers."""
 import os
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from sqlalchemy.orm import declarative_base
-from dotenv import load_dotenv
+from contextlib import contextmanager
+from typing import Iterator
 
-# Load environment variables from .env
-load_dotenv()
+import psycopg
+from psycopg.rows import dict_row
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL is not set in .env")
 
-# Example: postgresql+asyncpg://postgres:password@localhost:5432/ai_bureaucracy
-engine = create_async_engine(DATABASE_URL, echo=True, future=True)
+def _database_url() -> str:
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL must be set to a PostgreSQL connection URL")
+    return DATABASE_URL
 
-# Session factory
-AsyncSessionLocal = async_sessionmaker(
-    bind=engine,
-    expire_on_commit=False,
-)
 
-# Base class for models
-Base = declarative_base()
+@contextmanager
+def db_connection() -> Iterator[psycopg.Connection]:
+    with psycopg.connect(_database_url(), row_factory=dict_row) as conn:
+        yield conn
 
-async def init_db():
-    """Create all tables in the database."""
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+
+def init_db() -> None:
+    """Create the application schema. Safe to run at every application start."""
+    with db_connection() as conn, conn.cursor() as cur:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                email TEXT UNIQUE NOT NULL,
+                name TEXT NOT NULL,
+                pw_hash TEXT NOT NULL,
+                salt TEXT NOT NULL,
+                created_at BIGINT NOT NULL
+            )
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS revoked_tokens (
+                jti TEXT PRIMARY KEY,
+                expires_at BIGINT NOT NULL
+            )
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS schemes (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                category TEXT NOT NULL,
+                level TEXT NOT NULL,
+                state TEXT NOT NULL,
+                benefit TEXT NOT NULL,
+                official_url TEXT NOT NULL,
+                last_verified DATE,
+                data JSONB NOT NULL
+            )
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS schemes_state_idx ON schemes (state)")
+        cur.execute("CREATE INDEX IF NOT EXISTS schemes_data_gin_idx ON schemes USING GIN (data)")
+        cur.execute("CREATE INDEX IF NOT EXISTS revoked_tokens_expiry_idx ON revoked_tokens (expires_at)")
+        conn.commit()

@@ -4,12 +4,8 @@ MVP: filters the seed database by state applicability. The upgrade path is
 adding vector search over scheme descriptions and live crawling — the
 interface (ctx.candidates out) stays the same.
 """
-import json
-from pathlib import Path
-
 from backend.agents.base import BaseAgent, AgentContext
-
-DATA_FILE = Path(__file__).resolve().parent.parent / "data" / "schemes.json"
+from backend.database import db_connection
 
 
 class DiscoveryAgent(BaseAgent):
@@ -18,7 +14,9 @@ class DiscoveryAgent(BaseAgent):
     emoji = "🔍"
 
     async def run(self, ctx: AgentContext):
-        ctx.schemes = json.loads(DATA_FILE.read_text(encoding="utf-8"))
+        with db_connection() as conn, conn.cursor() as cur:
+            cur.execute("SELECT data FROM schemes WHERE state = 'ALL' OR state = %s", (ctx.profile.state,))
+            ctx.schemes = [row["data"] for row in cur.fetchall()]
         yield self.event(f"Searching indexed database — {len(ctx.schemes)} schemes loaded")
         await self.pause()
 
