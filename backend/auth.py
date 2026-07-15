@@ -17,6 +17,8 @@ TOKEN_TTL = 7 * 24 * 3600  # 7 days
 COOKIE = "access_token"
 JWT_ALGORITHM = "HS256"
 JWT_ISSUER = "ai-bureaucracy-navigator"
+# Set JWT_SECRET to a stable, high-entropy value in production. The development
+# fallback is deliberately process-local, so tokens do not survive a restart.
 JWT_SECRET = os.getenv("JWT_SECRET") or secrets.token_urlsafe(48)
 COOKIE_SECURE = os.getenv("COOKIE_SECURE", "false").lower() == "true"
 

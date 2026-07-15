@@ -1,4 +1,9 @@
-"""Pydantic models: the user profile (all fields optional/nullable) and scheme findings."""
+"""Models for AI Bureaucracy Navigator.
+
+Pydantic models used for request/response validation. Scheme records are
+stored as plain PostgreSQL rows (see backend/database.py) — no ORM layer.
+"""
+
 from typing import Optional, List
 from pydantic import BaseModel, Field
 

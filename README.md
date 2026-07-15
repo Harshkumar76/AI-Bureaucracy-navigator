@@ -161,7 +161,6 @@ uvicorn backend.main:app --reload
 ```
 
 For a deployed database, set `DATABASE_URL` to its PostgreSQL URL and run `python scripts/seed_schemes.py` during deployment. The seed command is idempotent: it inserts new schemes and updates existing IDs.
-
 ## Scheme database
 
 16 central-government schemes across Education, Agriculture, Health, Housing, Pension, Insurance, Welfare, Livelihood, Savings, and Skill Development — including PM-KISAN, NSP scholarships (CSSS, Post-Matric SC/Minority, NMMSS), Ayushman Bharat PM-JAY, PMAY-Gramin, Ujjwala 2.0, Atal Pension Yojana, PM Vishwakarma, Sukanya Samriddhi, and NSAP pensions. Each record carries structured eligibility rules, required documents, apply route, and a live-verified official URL. The schema already supports state-level schemes (`"state": "Karnataka"`).

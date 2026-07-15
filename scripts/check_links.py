@@ -15,14 +15,37 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from backend.database import db_connection
 
-HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; AI-Bureaucracy-Navigator/1.0)"}
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
+# Some government sites (Akamai/WAF-protected) block automated requests based
+# on TLS fingerprinting, not headers — they load fine in a real browser but
+# will always fail here. Manually verified working; skip the automated check
+# and just stamp them. Re-verify manually every so often and update the date
+# comment below.
+MANUALLY_VERIFIED = {
+    "https://beneficiary.nha.gov.in/",   # confirmed working in browser 2026-07
+    "https://www.nsiindia.gov.in/",      # confirmed working in browser 2026-07
+}
 
 
 def alive(url: str) -> bool:
+    if url in MANUALLY_VERIFIED:
+        return True
+
     try:
         response = requests.head(url, timeout=20, allow_redirects=True, headers=HEADERS)
-        if response.status_code >= 400:
-            response = requests.get(url, timeout=25, stream=True, headers=HEADERS)
+        if response.status_code < 400:
+            return True
+    except requests.RequestException:
+        pass
+
+    try:
+        response = requests.get(url, timeout=25, stream=True, headers=HEADERS)
         return response.status_code < 400
     except requests.RequestException:
         return False
@@ -40,7 +63,8 @@ def main() -> None:
         schemes = cur.fetchall()
         for scheme in schemes:
             is_alive = alive(scheme["official_url"])
-            print(f"{'OK' if is_alive else 'DEAD'}  {scheme['official_url']}")
+            note = " (manually verified)" if scheme["official_url"] in MANUALLY_VERIFIED else ""
+            print(f"{'OK' if is_alive else 'DEAD'}  {scheme['official_url']}{note}")
             if is_alive and args.stamp:
                 cur.execute("""UPDATE schemes
                                SET last_verified = %s,

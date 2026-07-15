@@ -2,6 +2,7 @@
 
 Run from the repo root:
     uvicorn backend.main:app --reload
+
 Then open http://localhost:8000
 """
 from pathlib import Path
@@ -20,6 +21,8 @@ app = FastAPI(title="AI Bureaucracy Navigator", version="0.3.0")
 app.include_router(auth_router)
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+
+
 @app.on_event("startup")
 def initialise_database():
     init_db()
