@@ -4,7 +4,7 @@
 
 > **Discover → Check Eligibility → Prepare Documents → Apply → Track → Resolve**
 
-Describe your situation once. Five specialized agents find what you qualify for, explain *why*, build your document checklist, and hand you the verified official portal to apply on.
+Describe your situation once. Five specialized agents find what you qualify for, explain *why*, build your document checklist, and hand you the verified official portal to apply on. Available in English, Hindi, Bengali, Tamil, and Telugu.
 
 ![Landing page](docs/landing.png)
 
@@ -50,6 +50,7 @@ flowchart LR
 |---|---|---|
 | Free-text note → profile fields | note is saved, skipped | "*19yo girl from a farming family, 1.5L income*" → 8 structured fields |
 | Results summary | deterministic template | warm 3-sentence natural summary |
+| Scheme content translation | English only | pre-translated into hi/bn/ta/te, stored in Postgres |
 | Eligibility decisions | **rule engine — always** | **rule engine — always** |
 | Links shown to users | **curated DB — always** | **curated DB — always** |
 
@@ -74,6 +75,8 @@ frontend/  (vanilla HTML/CSS/JS, dark theme)
     signin.html             sign in / create account (public)
     app.html + app.js       the navigator app (session required)
     scheme.html             per-scheme detail page
+    i18n.js                 language switcher — loads locale JSON, applies data-i18n text
+    locales/                UI translations: en, hi, bn, ta, te
     │  POST /api/navigate  →  text/event-stream (SSE)
 backend/
     main.py                 FastAPI app (serves frontend + API)
@@ -86,7 +89,9 @@ backend/
         intake.py  discovery.py  eligibility.py  documents.py  verification.py
     database.py             PostgreSQL schema and connection helpers
     data/schemes.json       one-time import source for the initial scheme catalogue
-scripts/check_links.py      link checker (keeps "verified <date>" honest)
+scripts/
+    check_links.py          link checker (keeps "verified <date>" honest)
+    translate_schemes.py    one-time job: translates scheme content into hi/bn/ta/te via LLM
 ```
 
 ## API
@@ -94,8 +99,8 @@ scripts/check_links.py      link checker (keeps "verified <date>" honest)
 | Method | Endpoint | Auth | Purpose |
 |---|---|---|---|
 | POST | `/api/navigate` | session | run the agent pipeline (SSE stream) |
-| GET | `/api/schemes` | public | scheme catalogue |
-| GET | `/api/schemes/{id}` | public | full scheme record + plain-language criteria |
+| GET | `/api/schemes?lang=` | public | scheme catalogue (`lang`: en/hi/bn/ta/te, default en) |
+| GET | `/api/schemes/{id}?lang=` | public | full scheme record + plain-language criteria, localized |
 | POST | `/api/auth/register` | — | create account, sets JWT cookie |
 | POST | `/api/auth/login` | — | sign in, sets JWT cookie |
 | POST | `/api/auth/logout` | session | end session |
@@ -115,7 +120,7 @@ uvicorn backend.main:app --reload
 Works fully offline with no API key. Optional extras:
 
 ```bash
-# enable free-text extraction + AI summary (any OpenAI-compatible endpoint, e.g. Groq)
+# enable free-text extraction + AI summary + scheme translation (any OpenAI-compatible endpoint, e.g. Groq)
 export LLM_API_KEY=...
 export LLM_BASE_URL=https://api.groq.com/openai/v1
 export LLM_MODEL=llama-3.3-70b-versatile
@@ -143,7 +148,7 @@ export COOKIE_SECURE=true
 
 ## PostgreSQL setup
 
-The application stores user accounts, revoked JWTs, and scheme records in PostgreSQL. `backend/data/schemes.json` is retained only as the one-time import source; the running application never reads it.
+The application stores user accounts, revoked JWTs, and scheme records (including translations) in PostgreSQL. `backend/data/schemes.json` is retained only as the one-time import source; the running application never reads it.
 
 For local development, start PostgreSQL with Docker:
 
@@ -161,6 +166,23 @@ uvicorn backend.main:app --reload
 ```
 
 For a deployed database, set `DATABASE_URL` to its PostgreSQL URL and run `python scripts/seed_schemes.py` during deployment. The seed command is idempotent: it inserts new schemes and updates existing IDs.
+
+A `.env` file in the repo root is the simplest way to set `DATABASE_URL`, `LLM_API_KEY`, `LLM_BASE_URL`, and `LLM_MODEL` for local development — `backend/main.py` loads it automatically via `python-dotenv`. Keep `.env` out of version control (already covered by `.gitignore`).
+
+## Multi-language support
+
+The UI — navigation, the profile form, live agent panel, results cards, checklist, and sign-in flow — is available in **English, Hindi, Bengali, Tamil, and Telugu** via a lightweight `frontend/i18n.js` loader. No build step or framework: static text uses `data-i18n` attributes matched against JSON dictionaries in `frontend/locales/`, and the chosen language persists in the browser via `localStorage`. A dropdown in the nav bar on every page lets users switch instantly.
+
+Scheme content (name, benefit, description, eligibility criteria, required documents) is **pre-translated once and stored** in the `schemes.translations` column (JSONB) rather than translated live on every request — this keeps scheme pages fast and avoids repeated LLM cost. Generate or refresh translations with:
+
+```bash
+python scripts/translate_schemes.py
+```
+
+This calls the configured LLM (`LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL`) once per scheme per language. It's resumable — re-running only fills in languages that are still missing (e.g. after a rate-limit failure mid-run) rather than re-translating everything, and prints an `(n/4 languages)` count per scheme so you can see what's left. Re-run it any time scheme content or eligibility rules change, so translations don't silently go stale.
+
+Machine translation of eligibility-critical text (income thresholds, age cutoffs, required documents) should be spot-checked by a native speaker before relying on it in production — accuracy matters more here than anywhere else in the app.
+
 ## Scheme database
 
 16 central-government schemes across Education, Agriculture, Health, Housing, Pension, Insurance, Welfare, Livelihood, Savings, and Skill Development — including PM-KISAN, NSP scholarships (CSSS, Post-Matric SC/Minority, NMMSS), Ayushman Bharat PM-JAY, PMAY-Gramin, Ujjwala 2.0, Atal Pension Yojana, PM Vishwakarma, Sukanya Samriddhi, and NSAP pensions. Each record carries structured eligibility rules, required documents, apply route, and a live-verified official URL. The schema already supports state-level schemes (`"state": "Karnataka"`).
@@ -172,14 +194,15 @@ For a deployed database, set `DATABASE_URL` to its PostgreSQL URL and run `pytho
 | Backend | FastAPI (Python) | async SSE streaming, pydantic validation |
 | Agents | custom lightweight pipeline | deterministic orchestration, zero token cost for rules |
 | LLM | any OpenAI-compatible endpoint | Groq / OpenAI / local — swappable via env vars |
-| Data | PostgreSQL | durable user, token-revocation, and scheme storage |
-| Frontend | vanilla HTML/CSS/JS | no build step, SSE via fetch streams |
+| Data | PostgreSQL | durable user, token-revocation, scheme, and translation storage |
+| Frontend | vanilla HTML/CSS/JS | no build step, SSE via fetch streams, i18n via JSON dictionaries |
 
 ## Roadmap
 
 - [ ] One-tap gap filling: answer a "possibly eligible" question and re-run instantly
 - [ ] Voice intake via Whisper (speak your situation in any language)
 - [ ] Vector search (pgvector) over scheme descriptions for fuzzy discovery
+- [ ] RAG pipeline: retrieve only relevant scheme chunks before querying the LLM, reducing hallucination risk as the catalogue grows
 - [ ] Ingestion pipeline: crawl myScheme / NSP, LLM-extract rules JSON at ingestion, human review queue
 - [ ] State-specific scheme packs
 - [ ] Deadline tracking + reminders (Postgres + cron)
