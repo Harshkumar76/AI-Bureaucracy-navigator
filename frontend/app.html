@@ -11,150 +11,154 @@
 <header>
   <div class="header-row">
     <div>
-      <div class="eyebrow">Multi-agent scheme discovery · India</div>
-      <h1>AI Bureaucracy Navigator</h1>
-      <p>Tell us about yourself — our agents find the government schemes you qualify for, with verified official links.</p>
+      <div class="eyebrow" data-i18n="appHeader.eyebrow">Multi-agent scheme discovery · India</div>
+      <h1 data-i18n="appHeader.title">AI Bureaucracy Navigator</h1>
+      <p data-i18n="appHeader.subtitle">Tell us about yourself — our agents find the government schemes you qualify for, with verified official links.</p>
     </div>
-    <div class="user-chip" id="user-chip"></div>
+    <div style="display:flex; align-items:center; gap:14px; flex-shrink:0;">
+      <div data-lang-mount></div>
+      <div class="user-chip" id="user-chip"></div>
+    </div>
   </div>
 </header>
 
 <main>
   <!-- ============ LEFT: profile form ============ -->
   <section class="panel" id="form-panel">
-    <h2>Your profile</h2>
-    <p class="hint">Every field is optional — the more you fill, the more precise the results.</p>
+    <h2 data-i18n="form.title">Your profile</h2>
+    <p class="hint" data-i18n="form.hint">Every field is optional — the more you fill, the more precise the results.</p>
 
     <form id="profile-form">
       <div class="grid">
-        <label>Age
-          <input type="number" name="age" min="0" max="120" placeholder="e.g. 21">
+        <label><span data-i18n="form.age">Age</span>
+          <input type="number" name="age" min="0" max="120" data-i18n-placeholder="form.agePlaceholder" placeholder="e.g. 21">
         </label>
-        <label>Gender
+        <label><span data-i18n="form.gender">Gender</span>
           <select name="gender">
             <option value="">—</option>
-            <option value="female">Female</option>
-            <option value="male">Male</option>
-            <option value="other">Other</option>
+            <option value="female" data-i18n="form.genderFemale">Female</option>
+            <option value="male" data-i18n="form.genderMale">Male</option>
+            <option value="other" data-i18n="form.genderOther">Other</option>
           </select>
         </label>
-        <label>State
+        <label><span data-i18n="form.state">State</span>
           <select name="state" id="state-select"><option value="">—</option></select>
         </label>
-        <label>Residence
+        <label><span data-i18n="form.residence">Residence</span>
           <select name="residence">
             <option value="">—</option>
-            <option value="rural">Rural</option>
-            <option value="urban">Urban</option>
+            <option value="rural" data-i18n="form.residenceRural">Rural</option>
+            <option value="urban" data-i18n="form.residenceUrban">Urban</option>
           </select>
         </label>
-        <label>Annual family income (₹)
-          <input type="number" name="annual_income" min="0" placeholder="e.g. 150000">
+        <label><span data-i18n="form.income">Annual family income (₹)</span>
+          <input type="number" name="annual_income" min="0" data-i18n-placeholder="form.incomePlaceholder" placeholder="e.g. 150000">
         </label>
-        <label>Social category
+        <label><span data-i18n="form.category">Social category</span>
           <select name="category">
             <option value="">—</option>
             <option>General</option><option>OBC</option><option>SC</option>
             <option>ST</option><option>EWS</option>
           </select>
         </label>
-        <label>Religion <span class="why" title="Only used to match notified minority-community schemes">?</span>
+        <label><span data-i18n="form.religion">Religion</span> <span class="why" data-i18n-title="form.religionWhy" title="Only used to match notified minority-community schemes">?</span>
           <select name="religion">
-            <option value="">Prefer not to say</option>
+            <option value="" data-i18n="form.religionPreferNot">Prefer not to say</option>
             <option>Hindu</option><option>Muslim</option><option>Christian</option>
             <option>Sikh</option><option>Buddhist</option><option>Jain</option>
-            <option>Parsi</option><option>Other</option>
+            <option>Parsi</option><option data-i18n="form.occOther">Other</option>
           </select>
         </label>
-        <label>Occupation
+        <label><span data-i18n="form.occupation">Occupation</span>
           <select name="occupation">
             <option value="">—</option>
-            <option value="student">Student</option>
-            <option value="farmer">Farmer</option>
-            <option value="salaried">Salaried</option>
-            <option value="self_employed">Self-employed</option>
-            <option value="unemployed">Unemployed</option>
-            <option value="unorganised_worker">Unorganised worker</option>
-            <option value="artisan">Artisan / craftsperson</option>
-            <option value="other">Other</option>
+            <option value="student" data-i18n="form.occStudent">Student</option>
+            <option value="farmer" data-i18n="form.occFarmer">Farmer</option>
+            <option value="salaried" data-i18n="form.occSalaried">Salaried</option>
+            <option value="self_employed" data-i18n="form.occSelfEmployed">Self-employed</option>
+            <option value="unemployed" data-i18n="form.occUnemployed">Unemployed</option>
+            <option value="unorganised_worker" data-i18n="form.occUnorganised">Unorganised worker</option>
+            <option value="artisan" data-i18n="form.occArtisan">Artisan / craftsperson</option>
+            <option value="other" data-i18n="form.occOther">Other</option>
           </select>
         </label>
-        <label>Education level
+        <label><span data-i18n="form.educationLevel">Education level</span>
           <select name="education_level">
             <option value="">—</option>
-            <option value="below_10th">Below 10th</option>
-            <option value="10th_pass">10th pass</option>
-            <option value="12th_pass">12th pass</option>
-            <option value="ug">Undergraduate</option>
-            <option value="pg">Postgraduate</option>
-            <option value="not_studying">Not studying</option>
+            <option value="below_10th" data-i18n="form.eduBelow10">Below 10th</option>
+            <option value="10th_pass" data-i18n="form.edu10Pass">10th pass</option>
+            <option value="12th_pass" data-i18n="form.edu12Pass">12th pass</option>
+            <option value="ug" data-i18n="form.eduUG">Undergraduate</option>
+            <option value="pg" data-i18n="form.eduPG">Postgraduate</option>
+            <option value="not_studying" data-i18n="form.eduNotStudying">Not studying</option>
           </select>
         </label>
-        <label>Marital status
+        <label><span data-i18n="form.maritalStatus">Marital status</span>
           <select name="marital_status">
             <option value="">—</option>
-            <option value="single">Single</option>
-            <option value="married">Married</option>
-            <option value="widowed">Widowed</option>
-            <option value="divorced">Divorced</option>
+            <option value="single" data-i18n="form.maritalSingle">Single</option>
+            <option value="married" data-i18n="form.maritalMarried">Married</option>
+            <option value="widowed" data-i18n="form.maritalWidowed">Widowed</option>
+            <option value="divorced" data-i18n="form.maritalDivorced">Divorced</option>
           </select>
         </label>
-        <label>Disability % (if any)
-          <input type="number" name="disability_pct" min="0" max="100" placeholder="e.g. 40">
+        <label><span data-i18n="form.disability">Disability % (if any)</span>
+          <input type="number" name="disability_pct" min="0" max="100" data-i18n-placeholder="form.disabilityPlaceholder" placeholder="e.g. 40">
         </label>
       </div>
 
       <fieldset>
-        <legend>Household</legend>
-        <label class="check"><input type="checkbox" name="has_bpl_card"> BPL / priority ration card</label>
-        <label class="check"><input type="checkbox" name="owns_cultivable_land"> Family owns cultivable land</label>
-        <label class="check"><input type="checkbox" name="owns_pucca_house"> Family owns a pucca house</label>
-        <label class="check"><input type="checkbox" name="has_girl_child_under_10"> Girl child under 10 in family</label>
+        <legend data-i18n="form.householdLegend">Household</legend>
+        <label class="check"><input type="checkbox" name="has_bpl_card"> <span data-i18n="form.bplCard">BPL / priority ration card</span></label>
+        <label class="check"><input type="checkbox" name="owns_cultivable_land"> <span data-i18n="form.cultivableLand">Family owns cultivable land</span></label>
+        <label class="check"><input type="checkbox" name="owns_pucca_house"> <span data-i18n="form.puccaHouse">Family owns a pucca house</span></label>
+        <label class="check"><input type="checkbox" name="has_girl_child_under_10"> <span data-i18n="form.girlChild">Girl child under 10 in family</span></label>
       </fieldset>
 
       <fieldset>
-        <legend>Documents I already have</legend>
+        <legend data-i18n="form.documentsLegend">Documents I already have</legend>
         <div class="doc-grid" id="doc-checkboxes">
-          <label class="check"><input type="checkbox" value="Aadhaar card"> Aadhaar card</label>
-          <label class="check"><input type="checkbox" value="Income certificate"> Income certificate</label>
-          <label class="check"><input type="checkbox" value="Caste certificate"> Caste certificate</label>
-          <label class="check"><input type="checkbox" value="Bank passbook"> Bank passbook</label>
-          <label class="check"><input type="checkbox" value="Ration card"> Ration card</label>
-          <label class="check"><input type="checkbox" value="Land ownership records"> Land records</label>
+          <label class="check"><input type="checkbox" value="Aadhaar card"> <span data-i18n="form.docAadhaar">Aadhaar card</span></label>
+          <label class="check"><input type="checkbox" value="Income certificate"> <span data-i18n="form.docIncome">Income certificate</span></label>
+          <label class="check"><input type="checkbox" value="Caste certificate"> <span data-i18n="form.docCaste">Caste certificate</span></label>
+          <label class="check"><input type="checkbox" value="Bank passbook"> <span data-i18n="form.docBank">Bank passbook</span></label>
+          <label class="check"><input type="checkbox" value="Ration card"> <span data-i18n="form.docRation">Ration card</span></label>
+          <label class="check"><input type="checkbox" value="Land ownership records"> <span data-i18n="form.docLand">Land records</span></label>
         </div>
       </fieldset>
 
-      <label>Anything else we should know? <span class="hint-inline">(optional — e.g. "my father passed away last year", "I scored 92% in class 12")</span>
-        <textarea name="extra_info" rows="3" placeholder="Describe your situation in your own words..."></textarea>
+      <label><span data-i18n="form.extraInfo">Anything else we should know?</span> <span class="hint-inline" data-i18n="form.extraInfoHint">(optional — e.g. "my father passed away last year", "I scored 92% in class 12")</span>
+        <textarea name="extra_info" rows="3" data-i18n-placeholder="form.extraInfoPlaceholder" placeholder="Describe your situation in your own words..."></textarea>
       </label>
 
-      <button type="submit" id="submit-btn">🚀 Find my schemes</button>
+      <button type="submit" id="submit-btn" data-i18n="form.submit">🚀 Find my schemes</button>
     </form>
   </section>
 
   <!-- ============ RIGHT: agents + findings ============ -->
   <section class="panel" id="results-panel">
     <div id="agent-panel" class="hidden">
-      <h2>Agents at work</h2>
+      <h2 data-i18n="agentsPanel.title">Agents at work</h2>
       <div id="agent-list"></div>
     </div>
 
     <div id="findings" class="hidden">
-      <h2>Your results</h2>
+      <h2 data-i18n="findings.title">Your results</h2>
       <div id="summary-box"></div>
       <div id="finding-cards"></div>
       <div id="checklist-box"></div>
-      <p class="disclaimer">⚠ Results are indicative, based on what you told us. Final eligibility
+      <p class="disclaimer" data-i18n="findings.disclaimer">⚠ Results are indicative, based on what you told us. Final eligibility
         depends on the documents you submit — always confirm on the official portal linked above.</p>
     </div>
 
     <div id="placeholder">
-      <p>👋 Fill in whatever you know and hit <b>Find my schemes</b>.<br>
+      <p data-i18n-html="placeholder.text">👋 Fill in whatever you know and hit <b>Find my schemes</b>.<br>
       You'll see each agent work in real time, then your matched schemes with official links.</p>
     </div>
   </section>
 </main>
 
+<script src="i18n.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

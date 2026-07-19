@@ -10,33 +10,37 @@
 
 <nav class="landing-nav">
   <a class="logo" href="/">Bureaucracy&nbsp;Navigator</a>
+  <div class="nav-links">
+    <div data-lang-mount></div>
+  </div>
 </nav>
 
 <div class="auth-wrap">
   <div class="auth-card">
     <div class="auth-tabs">
-      <button id="tab-signin" class="active">Sign in</button>
-      <button id="tab-signup">Create account</button>
+      <button id="tab-signin" class="active" data-i18n="signin.tabSignin">Sign in</button>
+      <button id="tab-signup" data-i18n="signin.tabSignup">Create account</button>
     </div>
 
     <form id="auth-form">
-      <label id="name-field" class="hidden">Name
-        <input type="text" name="name" placeholder="Your name" autocomplete="name">
+      <label id="name-field" class="hidden"><span data-i18n="signin.name">Name</span>
+        <input type="text" name="name" data-i18n-placeholder="signin.namePlaceholder" placeholder="Your name" autocomplete="name">
       </label>
-      <label>Email
-        <input type="email" name="email" placeholder="you@example.com" required autocomplete="email">
+      <label><span data-i18n="signin.email">Email</span>
+        <input type="email" name="email" data-i18n-placeholder="signin.emailPlaceholder" placeholder="you@example.com" required autocomplete="email">
       </label>
-      <label>Password
-        <input type="password" name="password" placeholder="At least 8 characters" required autocomplete="current-password">
+      <label><span data-i18n="signin.password">Password</span>
+        <input type="password" name="password" data-i18n-placeholder="signin.passwordPlaceholder" placeholder="At least 8 characters" required autocomplete="current-password">
       </label>
       <div id="auth-error" class="auth-error hidden"></div>
-      <button type="submit" class="btn btn-primary btn-lg" id="auth-submit">Sign in</button>
+      <button type="submit" class="btn btn-primary btn-lg" id="auth-submit" data-i18n="signin.submitSignin">Sign in</button>
     </form>
 
-    <p class="auth-hint">Your profile answers stay on this server — nothing is shared with any scheme portal.</p>
+    <p class="auth-hint" data-i18n="signin.hint">Your profile answers stay on this server — nothing is shared with any scheme portal.</p>
   </div>
 </div>
 
+<script src="i18n.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 let mode = location.hash === "#signup" ? "signup" : "signin";
@@ -46,11 +50,14 @@ function setMode(m) {
   $("tab-signin").classList.toggle("active", m === "signin");
   $("tab-signup").classList.toggle("active", m === "signup");
   $("name-field").classList.toggle("hidden", m === "signin");
-  $("auth-submit").textContent = m === "signin" ? "Sign in" : "Create account";
+  if (Object.keys(window._i18nDict).length) {
+    $("auth-submit").textContent = m === "signin" ? t("signin.submitSignin") : t("signin.submitSignup");
+  }
   $("auth-error").classList.add("hidden");
 }
 $("tab-signin").onclick = () => setMode("signin");
 $("tab-signup").onclick = () => setMode("signup");
+document.addEventListener("i18n:changed", () => setMode(mode));
 setMode(mode);
 
 // already signed in? straight to the app

@@ -53,6 +53,10 @@ def init_db() -> None:
                 data JSONB NOT NULL
             )
         """)
+        # translations: { "hi": {name, benefit, description, apply_mode, documents:[...], criteria:[...]},
+        #                 "bn": {...}, "ta": {...}, "te": {...} }
+        # Populated by scripts/translate_schemes.py. Absent/empty = fall back to English.
+        cur.execute("ALTER TABLE schemes ADD COLUMN IF NOT EXISTS translations JSONB NOT NULL DEFAULT '{}'::jsonb")
         cur.execute("CREATE INDEX IF NOT EXISTS schemes_state_idx ON schemes (state)")
         cur.execute("CREATE INDEX IF NOT EXISTS schemes_data_gin_idx ON schemes USING GIN (data)")
         cur.execute("CREATE INDEX IF NOT EXISTS revoked_tokens_expiry_idx ON revoked_tokens (expires_at)")
