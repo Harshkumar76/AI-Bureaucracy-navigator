@@ -348,3 +348,12 @@ button[type=submit]:disabled { background: var(--primary-soft); color: var(--mut
   padding: 6px 12px; cursor: pointer;
 }
 .user-chip button:hover { border-color: var(--primary-dim); }
+
+/* ---- language switcher ---- */
+.lang-switcher {
+  width: auto; margin: 0; padding: 6px 10px; font-size: 12.5px;
+  border: 1px solid var(--input-border); border-radius: var(--radius);
+  background: var(--card-2); color: var(--foreground);
+  font-family: var(--sans); cursor: pointer;
+}
+.lang-switcher:focus { outline: 2px solid var(--primary-dim); outline-offset: -1px; }

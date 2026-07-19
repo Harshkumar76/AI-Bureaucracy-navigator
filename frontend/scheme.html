@@ -11,14 +11,16 @@
 <nav class="landing-nav">
   <a class="logo" href="/">Bureaucracy&nbsp;Navigator</a>
   <div class="nav-links">
-    <a href="/app.html">← Back to my results</a>
+    <div data-lang-mount></div>
+    <a href="/app.html" data-i18n="nav.backToResults">← Back to my results</a>
   </div>
 </nav>
 
 <div class="detail-wrap" id="detail">
-  <p class="detail-loading">Loading scheme…</p>
+  <p class="detail-loading" data-i18n="schemeDetail.loading">Loading scheme…</p>
 </div>
 
+<script src="i18n.js"></script>
 <script>
 const id = new URLSearchParams(location.search).get("id");
 const box = document.getElementById("detail");
@@ -29,23 +31,26 @@ const finding = (JSON.parse(sessionStorage.getItem("nav_findings") || "[]"))
 
 function verdictSection() {
   if (!finding) return "";
-  const label = { eligible: "Eligible", possible: "Possibly eligible", ineligible: "Not eligible" }[finding.status];
-  const docsHave = new Set(finding.documents.filter(d => !finding.documents_missing.includes(d)));
+  const label = {
+    eligible: t("findings.statusEligible"),
+    possible: t("findings.statusPossible"),
+    ineligible: t("findings.statusIneligible"),
+  }[finding.status];
   return `
   <section class="detail-section your-verdict">
-    <div class="eyebrow">Your result</div>
+    <div class="eyebrow">${t("schemeDetail.yourResultEyebrow")}</div>
     <div class="verdict-head">
       <span class="pill ${finding.status}">${label}</span>
-      <span class="verdict-note">based on the profile from your last run</span>
+      <span class="verdict-note">${t("schemeDetail.yourResultNote")}</span>
     </div>
     <ul class="reasons">${finding.reasons.map(r => `<li>${r}</li>`).join("")}</ul>
   </section>`;
 }
 
 async function render() {
-  if (!id) { box.innerHTML = '<p class="detail-loading">No scheme selected.</p>'; return; }
-  const res = await fetch(`/api/schemes/${encodeURIComponent(id)}`);
-  if (!res.ok) { box.innerHTML = '<p class="detail-loading">Scheme not found.</p>'; return; }
+  if (!id) { box.innerHTML = `<p class="detail-loading">${t("schemeDetail.noScheme")}</p>`; return; }
+  const res = await fetch(`/api/schemes/${encodeURIComponent(id)}?lang=${window._i18nLang || "en"}`);
+  if (!res.ok) { box.innerHTML = `<p class="detail-loading">${t("schemeDetail.notFound")}</p>`; return; }
   const s = await res.json();
   document.title = `${s.name} — AI Bureaucracy Navigator`;
 
@@ -53,15 +58,15 @@ async function render() {
   const docRow = (d) => {
     if (!finding) return `<li><span class="doc-mark">•</span>${d}</li>`;
     return missing.has(d)
-      ? `<li><span class="doc-mark miss">✗</span>${d} <span class="doc-note">you marked this as missing</span></li>`
-      : `<li><span class="doc-mark have">✓</span>${d} <span class="doc-note">you have this</span></li>`;
+      ? `<li><span class="doc-mark miss">✗</span>${d} <span class="doc-note">${t("schemeDetail.docMissing")}</span></li>`
+      : `<li><span class="doc-mark have">✓</span>${d} <span class="doc-note">${t("schemeDetail.docHave")}</span></li>`;
   };
 
   box.innerHTML = `
     <div class="detail-head">
       <div class="chips">
         <span class="chip">${s.category}</span>
-        <span class="chip">${s.level === "central" ? "Central government" : s.state}</span>
+        <span class="chip">${s.level === "central" ? t("schemeDetail.centralGovernment") : s.state}</span>
       </div>
       <h1>${s.name}</h1>
       <div class="detail-benefit">${s.benefit}</div>
@@ -70,35 +75,39 @@ async function render() {
     ${verdictSection()}
 
     <section class="detail-section">
-      <div class="eyebrow">About this scheme</div>
+      <div class="eyebrow">${t("schemeDetail.aboutEyebrow")}</div>
       <p class="detail-desc">${s.description}</p>
     </section>
 
     <section class="detail-section">
-      <div class="eyebrow">Who is eligible</div>
+      <div class="eyebrow">${t("schemeDetail.eligibleEyebrow")}</div>
       <ul class="criteria">${s.criteria.map(c => `<li>${c}</li>`).join("")}</ul>
-      <p class="detail-fineprint">Criteria are indicative — the concerned department applies the full official rules at verification.</p>
+      <p class="detail-fineprint">${t("schemeDetail.eligibleFineprint")}</p>
     </section>
 
     <section class="detail-section">
-      <div class="eyebrow">Documents required</div>
+      <div class="eyebrow">${t("schemeDetail.documentsEyebrow")}</div>
       <ul class="doc-list">${s.documents.map(docRow).join("")}</ul>
     </section>
 
     <section class="detail-section">
-      <div class="eyebrow">How to apply</div>
+      <div class="eyebrow">${t("schemeDetail.applyEyebrow")}</div>
       <p class="detail-desc">${s.apply_mode}</p>
       <a class="btn btn-primary btn-lg" href="${s.official_url}" target="_blank" rel="noopener">
-        Open official portal ↗
+        ${t("schemeDetail.openPortal")}
       </a>
       <div class="source" style="margin-top:16px">
         <span>${new URL(s.official_url).hostname}</span>
-        <span>link verified ${s.last_verified}</span>
+        <span>${t("schemeDetail.linkVerified")} ${s.last_verified}</span>
       </div>
     </section>
   `;
 }
-render();
+
+// wait for i18n to be ready before first render, then re-render (re-fetching
+// in the new language) whenever the user switches language
+document.addEventListener("i18n:changed", render);
+if (Object.keys(window._i18nDict || {}).length) render();
 </script>
 </body>
 </html>

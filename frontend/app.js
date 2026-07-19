@@ -20,7 +20,7 @@ fetch("/api/auth/me").then(async (r) => {
   name.textContent = user.name;
   const signout = document.createElement("button");
   signout.id = "signout-btn";
-  signout.textContent = "Sign out";
+  signout.textContent = t("appHeader.signOut");
   chip.append(name, signout);
   signout.onclick = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -102,13 +102,21 @@ function renderFindings(data) {
   const mk = (f) => {
     const card = document.createElement("div");
     card.className = `card ${f.status}` + (f.status === "ineligible" ? " ineligible-card" : "");
-    const statusLabel = { eligible: "Eligible", possible: "Possibly eligible", ineligible: "Not eligible" }[f.status];
+    const statusLabel = {
+      eligible: t("findings.statusEligible"),
+      possible: t("findings.statusPossible"),
+      ineligible: t("findings.statusIneligible"),
+    }[f.status];
     const railMark = { eligible: "✓", possible: "?", ineligible: "✕" }[f.status];
-    const railLabel = { eligible: "match", possible: "confirm", ineligible: "no match" }[f.status];
+    const railLabel = {
+      eligible: t("findings.railMatch"),
+      possible: t("findings.railConfirm"),
+      ineligible: t("findings.railNoMatch"),
+    }[f.status];
     const missing = f.documents_missing.length
-      ? `<span class="missing">Missing: ${f.documents_missing.join(", ")}</span>`
-      : "You have all required documents ✓";
-    const linkNote = f.link_alive === false ? " ⚠ portal unreachable right now" : "";
+      ? `<span class="missing">${t("findings.missingPrefix")}${f.documents_missing.join(", ")}</span>`
+      : t("findings.allDocsHave");
+    const linkNote = f.link_alive === false ? t("findings.portalUnreachable") : "";
     card.innerHTML = `
       <div class="rail">
         <span class="rail-mark">${railMark}</span>
@@ -119,16 +127,16 @@ function renderFindings(data) {
           <h3><a class="scheme-link" href="scheme.html?id=${encodeURIComponent(f.scheme_id)}">${f.name}</a></h3>
           <div class="card-actions">
             <span class="pill ${f.status}">${statusLabel}</span>
-            <a class="btn-details" href="scheme.html?id=${encodeURIComponent(f.scheme_id)}">View details →</a>
+            <a class="btn-details" href="scheme.html?id=${encodeURIComponent(f.scheme_id)}">${t("findings.viewDetails")}</a>
           </div>
         </div>
         <div class="benefit">${f.benefit}</div>
         <ul class="reasons">${f.reasons.map(r => `<li>${r}</li>`).join("")}</ul>
-        <div class="docs">Needs: ${f.documents.join(", ")}<br>${missing}</div>
+        <div class="docs">${t("findings.needsPrefix")}${f.documents.join(", ")}<br>${missing}</div>
         <div class="source">
           <span><a href="${f.official_url}" target="_blank" rel="noopener">${new URL(f.official_url).hostname}</a>
             — ${f.apply_mode}${linkNote}</span>
-          <span>verified ${f.last_verified}</span>
+          <span>${t("findings.verified")} ${f.last_verified}</span>
         </div>
       </div>`;
     return card;
@@ -139,7 +147,7 @@ function renderFindings(data) {
   if (hide.length) {
     const btn = document.createElement("button");
     btn.className = "toggle-ineligible";
-    btn.textContent = `Show ${hide.length} schemes you don't qualify for (and why) ▾`;
+    btn.textContent = t("findings.showIneligible", { n: hide.length });
     const hidden = document.createElement("div");
     hidden.style.display = "none";
     hide.forEach(f => hidden.appendChild(mk(f)));
@@ -147,8 +155,8 @@ function renderFindings(data) {
       const open = hidden.style.display === "none";
       hidden.style.display = open ? "block" : "none";
       btn.textContent = open
-        ? "Hide ineligible schemes ▴"
-        : `Show ${hide.length} schemes you don't qualify for (and why) ▾`;
+        ? t("findings.hideIneligible")
+        : t("findings.showIneligible", { n: hide.length });
     };
     cards.appendChild(btn);
     cards.appendChild(hidden);
@@ -156,14 +164,14 @@ function renderFindings(data) {
 
   const box = $("checklist-box");
   if (data.checklist.length) {
-    box.innerHTML = "<h2>📋 Your document checklist</h2>";
+    box.innerHTML = `<h2>${t("checklist.title")}</h2>`;
     for (const c of data.checklist) {
       const item = document.createElement("div");
       item.className = "check-item";
       item.innerHTML = `
         <span class="mark">${c.have ? "✅" : "⬜"}</span>
         <span><b>${c.document}</b>
-          <span class="for">— needed for ${c.needed_for.length} scheme(s)</span></span>`;
+          <span class="for">${t("checklist.neededFor", { n: c.needed_for.length })}</span></span>`;
       box.appendChild(item);
     }
   } else {
@@ -177,7 +185,7 @@ $("profile-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const btn = $("submit-btn");
   btn.disabled = true;
-  btn.textContent = "Agents working...";
+  btn.textContent = t("form.submitWorking");
   $("placeholder").style.display = "none";
   $("findings").classList.add("hidden");
   $("agent-list").innerHTML = "";
@@ -211,9 +219,9 @@ $("profile-form").addEventListener("submit", async (e) => {
       }
     }
   } catch (err) {
-    $("agent-list").innerHTML = `<div class="agent-row">❌ ${err.message}</div>`;
+    $("agent-list").innerHTML = `<div class="agent-row">${t("errorPrefix")}${err.message}</div>`;
   } finally {
     btn.disabled = false;
-    btn.textContent = "🚀 Find my schemes";
+    btn.textContent = t("form.submit");
   }
 });
