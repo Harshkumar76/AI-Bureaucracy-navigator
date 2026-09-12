@@ -1,0 +1,221 @@
+[
+  {
+    "id": "student_up_low_income",
+    "description": "Student, Uttar Pradesh, low income, free-text about education support",
+    "profile": {
+      "age": 16,
+      "state": "Uttar Pradesh",
+      "occupation": "student",
+      "education_level": "10th_pass",
+      "annual_income": 200000,
+      "extra_info": "I am a student from Uttar Pradesh and my family has a low income. I need financial support for my education."
+    },
+    "expected_retrieval_scheme_ids": ["nmmss", "csss", "post-matric-sc", "minority-post-matric"],
+    "min_relevant_in_top_k": 1,
+    "expected_eligibility": {
+      "nmmss": "eligible",
+      "pmsby": "ineligible"
+    }
+  },
+  {
+    "id": "farmer_with_land",
+    "description": "Farmer who owns cultivable land, adult",
+    "profile": {
+      "age": 35,
+      "occupation": "farmer",
+      "owns_cultivable_land": true,
+      "extra_info": "I am a farmer and I own land. I need income support for my family."
+    },
+    "expected_retrieval_scheme_ids": ["pm-kisan"],
+    "min_relevant_in_top_k": 1,
+    "expected_eligibility": {
+      "pm-kisan": "eligible"
+    }
+  },
+  {
+    "id": "farmer_no_land_info",
+    "description": "Farmer, land ownership unknown -- must resolve to 'possible', never a silent fail",
+    "profile": {
+      "age": 35,
+      "occupation": "farmer"
+    },
+    "expected_retrieval_scheme_ids": [],
+    "min_relevant_in_top_k": 0,
+    "expected_eligibility": {
+      "pm-kisan": "possible"
+    }
+  },
+  {
+    "id": "elderly_bpl_widow",
+    "description": "60+ years old, holds a BPL card -- old age pension",
+    "profile": {
+      "age": 65,
+      "has_bpl_card": true,
+      "marital_status": "widowed"
+    },
+    "expected_retrieval_scheme_ids": ["ignoaps"],
+    "min_relevant_in_top_k": 1,
+    "expected_eligibility": {
+      "ignoaps": "eligible",
+      "apy": "ineligible"
+    }
+  },
+  {
+    "id": "income_too_high_for_scholarship",
+    "description": "Student whose income exceeds every scholarship's ceiling -- must be ineligible, not possible",
+    "profile": {
+      "age": 17,
+      "occupation": "student",
+      "education_level": "12th_pass",
+      "annual_income": 900000
+    },
+    "expected_retrieval_scheme_ids": [],
+    "min_relevant_in_top_k": 0,
+    "expected_eligibility": {
+      "csss": "ineligible",
+      "nmmss": "ineligible"
+    }
+  },
+  {
+    "id": "girl_child_savings",
+    "description": "Family has a girl child under 10 -- Sukanya Samriddhi",
+    "profile": {
+      "has_girl_child_under_10": true,
+      "extra_info": "I want to open a savings account for my daughter who is 5 years old"
+    },
+    "expected_retrieval_scheme_ids": ["sukanya-samriddhi"],
+    "min_relevant_in_top_k": 1,
+    "expected_eligibility": {
+      "sukanya-samriddhi": "eligible"
+    }
+  },
+  {
+    "id": "artisan_toolkit",
+    "description": "Traditional artisan seeking equipment support",
+    "profile": {
+      "age": 30,
+      "occupation": "artisan",
+      "extra_info": "I am a carpenter and need help buying tools and getting training"
+    },
+    "expected_retrieval_scheme_ids": ["pm-vishwakarma"],
+    "min_relevant_in_top_k": 1,
+    "expected_eligibility": {
+      "pm-vishwakarma": "eligible"
+    }
+  },
+  {
+    "id": "minority_student_low_income",
+    "description": "Muslim student, class 12, low income -- minority scholarship",
+    "profile": {
+      "age": 17,
+      "occupation": "student",
+      "religion": "Muslim",
+      "education_level": "12th_pass",
+      "annual_income": 150000,
+      "extra_info": "I am a Muslim student studying in class 12, my family income is low"
+    },
+    "expected_retrieval_scheme_ids": ["minority-post-matric", "csss", "nmmss"],
+    "min_relevant_in_top_k": 1,
+    "expected_eligibility": {
+      "minority-post-matric": "eligible"
+    }
+  },
+  {
+    "id": "sc_student_post_matric",
+    "description": "SC category student above 10th, income within limit",
+    "profile": {
+      "age": 18,
+      "occupation": "student",
+      "category": "SC",
+      "education_level": "ug",
+      "annual_income": 200000
+    },
+    "expected_retrieval_scheme_ids": [],
+    "min_relevant_in_top_k": 0,
+    "expected_eligibility": {
+      "post-matric-sc": "eligible"
+    }
+  },
+  {
+    "id": "rural_no_house",
+    "description": "Rural household without a pucca house -- housing scheme",
+    "profile": {
+      "residence": "rural",
+      "owns_pucca_house": false,
+      "extra_info": "I live in a village and my house is in bad condition, need help building a proper house"
+    },
+    "expected_retrieval_scheme_ids": ["pmay-g"],
+    "min_relevant_in_top_k": 1,
+    "expected_eligibility": {
+      "pmay-g": "eligible"
+    }
+  },
+  {
+    "id": "urban_resident_wrong_for_pmayg",
+    "description": "Urban residence -- must fail the rural-only housing scheme, not show as possible",
+    "profile": {
+      "residence": "urban",
+      "owns_pucca_house": false
+    },
+    "expected_retrieval_scheme_ids": [],
+    "min_relevant_in_top_k": 0,
+    "expected_eligibility": {
+      "pmay-g": "ineligible"
+    }
+  },
+  {
+    "id": "poor_household_bpl_lpg",
+    "description": "Adult woman from a BPL household -- Ujjwala",
+    "profile": {
+      "age": 28,
+      "gender": "female",
+      "has_bpl_card": true,
+      "extra_info": "I need a free gas cylinder connection for my kitchen, we don't have much money"
+    },
+    "expected_retrieval_scheme_ids": ["pm-ujjwala"],
+    "min_relevant_in_top_k": 1,
+    "expected_eligibility": {
+      "pm-ujjwala": "eligible"
+    }
+  },
+  {
+    "id": "male_ineligible_for_ujjwala",
+    "description": "Male applicant -- must be ineligible for a female-only scheme, not possible",
+    "profile": {
+      "age": 30,
+      "gender": "male",
+      "has_bpl_card": true
+    },
+    "expected_retrieval_scheme_ids": [],
+    "min_relevant_in_top_k": 0,
+    "expected_eligibility": {
+      "pm-ujjwala": "ineligible"
+    }
+  },
+  {
+    "id": "unemployed_youth_skill_training",
+    "description": "Unemployed young adult wanting free skill training",
+    "profile": {
+      "age": 22,
+      "occupation": "unemployed",
+      "extra_info": "I finished school but have no job, I want to learn a skill for free"
+    },
+    "expected_retrieval_scheme_ids": ["pmkvy"],
+    "min_relevant_in_top_k": 1,
+    "expected_eligibility": {
+      "pmkvy": "eligible"
+    }
+  },
+  {
+    "id": "completely_empty_profile",
+    "description": "Edge case: no profile fields at all -- every conditional scheme must resolve to 'possible', never a false 'eligible' or silent 'ineligible'",
+    "profile": {},
+    "expected_retrieval_scheme_ids": [],
+    "min_relevant_in_top_k": 0,
+    "expected_eligibility": {
+      "pm-kisan": "possible",
+      "pmsby": "possible",
+      "sukanya-samriddhi": "possible"
+    }
+  }
+]

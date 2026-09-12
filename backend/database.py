@@ -5,6 +5,7 @@ from typing import Iterator
 
 import psycopg
 from psycopg.rows import dict_row
+from pgvector.psycopg import register_vector
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
@@ -18,8 +19,8 @@ def _database_url() -> str:
 @contextmanager
 def db_connection() -> Iterator[psycopg.Connection]:
     with psycopg.connect(_database_url(), row_factory=dict_row) as conn:
+        register_vector(conn)   # <-- new: lets psycopg understand the `vector` type
         yield conn
-
 
 def init_db() -> None:
     """Create the application schema. Safe to run at every application start."""

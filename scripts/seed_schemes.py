@@ -3,11 +3,15 @@
 Run once after starting PostgreSQL, or again to update existing scheme records:
     python scripts/seed_schemes.py
 """
+
+from dotenv import load_dotenv
+load_dotenv()
 import json
 import sys
 from pathlib import Path
-
 from psycopg.types.json import Jsonb
+
+
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))

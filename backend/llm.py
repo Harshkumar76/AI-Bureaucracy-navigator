@@ -87,12 +87,24 @@ def summarize(profile_dict: dict, findings: list) -> Optional[str]:
     brief = [
         {"name": f["name"], "status": f["status"], "benefit": f["benefit"]}
         for f in findings if f["status"] in ("eligible", "possible")
-    ]
+    ][:6]  # cap at 6 -- keeps prompt+completion size predictable regardless of catalogue size
+
+    # Scale the requested length with how much there actually is to summarize --
+    # a sparse profile can produce 6+ "possible" schemes, and forcing that into
+    # a rigid 3-4 sentences either drops real information or overruns anyway.
+    sentence_guidance = (
+        "3-4 warm, plain sentences" if len(brief) <= 4
+        else "5-6 warm, plain sentences, prioritizing the 2-3 most valuable schemes"
+    )
+
     return _chat([
         {"role": "system", "content":
-            "You are a helpful assistant for Indian government schemes. In 3-4 warm, plain sentences, "
-            "summarise the findings for the user: what they qualify for, the standout benefit, and what to do next. "
-            "Do NOT invent schemes, amounts, or links."},
+        f"You are a helpful assistant for Indian government schemes. In {sentence_guidance}, "
+        "summarise the findings for the user: what they qualify for, the standout benefit, and what to do next. "
+        "ONLY use numbers, amounts, and figures that are explicitly present in the Findings JSON below. "
+        "If a scheme's benefit has no specific number, describe it in general terms without inventing one. "
+        "Do NOT invent schemes, amounts, or links."},
         {"role": "user", "content":
             f"Profile: {json.dumps(profile_dict)}\nFindings: {json.dumps(brief, ensure_ascii=False)}"},
-    ], max_tokens=250)
+    ], max_tokens=500)
+ 

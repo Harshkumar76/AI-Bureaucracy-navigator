@@ -8,7 +8,8 @@ import argparse
 import datetime
 import sys
 from pathlib import Path
-
+from dotenv import load_dotenv
+load_dotenv()
 import requests
 
 ROOT = Path(__file__).resolve().parent.parent

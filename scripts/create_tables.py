@@ -1,6 +1,8 @@
 # scripts/create_tables.py
 
 import asyncio
+from dotenv import load_dotenv
+load_dotenv()
 from backend.database import engine, Base
 from backend import models   # <-- this line is critical!
 

@@ -6,3 +6,5 @@ venv/
 *.egg-info/
 .pytest_cache/
 backend/data/*.db
+debug_*.py
+eval/eval_report.json
