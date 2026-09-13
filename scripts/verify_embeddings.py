@@ -1,4 +1,9 @@
 """scripts/verify_embeddings.py"""
+"""scripts/verify_embeddings.py"""
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from dotenv import load_dotenv
 load_dotenv()
 from backend.database import db_connection
@@ -41,7 +46,12 @@ def main():
 
         cur.execute("SELECT id, embedding FROM schemes WHERE embedding IS NOT NULL LIMIT 1")
         sample = cur.fetchone()
-        preview = list(sample["embedding"])[:5]
+        raw_vector = sample["embedding"]
+        # pgvector's Vector wrapper isn't always directly iterable depending on
+        # the installed pgvector-python version -- .to_list() is the stable way
+        # to get a plain Python list out of it.
+        vector_values = raw_vector.to_list() if hasattr(raw_vector, "to_list") else list(raw_vector)
+        preview = vector_values[:5]
         print(f"\nSample vector ({sample['id']}), first 5 values: {preview}")
 
         if mismatches:

@@ -13,6 +13,10 @@ Run once:
     python scripts/setup_pgvector_schema.py
 """
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from dotenv import load_dotenv
 load_dotenv()
 from backend.database import db_connection
@@ -28,6 +32,28 @@ def column_exists(cur, table: str, column: str) -> bool:
     return cur.fetchone() is not None
 
 
+def existing_vector_dimension(cur, table: str, column: str) -> int | None:
+    """Returns the declared dimension of an existing `vector(N)` column, e.g.
+    256, by asking Postgres to render its full type name and parsing the
+    number out of "vector(256)". Returns None if the column has no fixed
+    dimension declared (bare `vector` with no size)."""
+    cur.execute(
+        """
+        SELECT format_type(a.atttypid, a.atttypmod) AS full_type
+        FROM pg_attribute a
+        WHERE a.attrelid = %s::regclass AND a.attname = %s AND NOT a.attisdropped
+        """,
+        (table, column),
+    )
+    row = cur.fetchone()
+    if not row:
+        return None
+    full_type = row["full_type"]  # e.g. "vector(256)" or just "vector"
+    if "(" not in full_type:
+        return None
+    return int(full_type.split("(")[1].rstrip(")"))
+
+
 def main():
     embedding_service = get_embedding_service()
     dim = embedding_service.dimension
@@ -41,7 +67,31 @@ def main():
             cur.execute(f"ALTER TABLE schemes ADD COLUMN embedding VECTOR({dim})")
             print(f"Added schemes.embedding VECTOR({dim})")
         else:
-            print("schemes.embedding already exists -- skipped")
+            existing_dim = existing_vector_dimension(cur, "schemes", "embedding")
+            if existing_dim is not None and existing_dim != dim:
+                print(
+                    f"schemes.embedding is VECTOR({existing_dim}) but the current "
+                    f"model produces VECTOR({dim}) -- migrating column "
+                    f"(existing stored vectors are dropped; re-run "
+                    f"generate_scheme_embeddings.py afterward to refill them)"
+                )
+                # Drop any HNSW index first -- it's built against the old
+                # dimension and Postgres won't let the column change type
+                # while an index depends on it.
+                cur.execute("DROP INDEX IF EXISTS schemes_embedding_hnsw_idx")
+                cur.execute("ALTER TABLE schemes DROP COLUMN embedding")
+                cur.execute(f"ALTER TABLE schemes ADD COLUMN embedding VECTOR({dim})")
+                # Old hash/model bookkeeping is meaningless for a dropped
+                # column -- clear it so generate_scheme_embeddings.py's
+                # "unchanged" check doesn't get confused by stale metadata.
+                cur.execute(
+                    "UPDATE schemes SET embedding_content_hash = NULL, embedding_model = NULL, "
+                    "embedding_updated_at = NULL"
+                )
+                conn.commit()
+                print(f"Migrated schemes.embedding to VECTOR({dim})")
+            else:
+                print("schemes.embedding already exists -- skipped")
 
         for col, ddl_type in [
             ("embedding_content_hash", "TEXT"),
@@ -66,7 +116,7 @@ def main():
         else:
             print("Skipped HNSW index (ENABLE_HNSW_INDEX=false) -- fine at 16 schemes")
 
-    print("Done. No existing data was modified.")
+    print("Done.")
 
 
 if __name__ == "__main__":

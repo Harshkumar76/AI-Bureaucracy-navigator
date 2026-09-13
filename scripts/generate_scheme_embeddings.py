@@ -3,6 +3,10 @@ scripts/generate_scheme_embeddings.py
 
 Uses backend.database.db_connection(), same as every other part of the app.
 """
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from dotenv import load_dotenv
 load_dotenv()
 
