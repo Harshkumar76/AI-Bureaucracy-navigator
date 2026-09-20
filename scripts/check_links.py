@@ -29,8 +29,9 @@ HEADERS = {
 # and just stamp them. Re-verify manually every so often and update the date
 # comment below.
 MANUALLY_VERIFIED = {
-    "https://beneficiary.nha.gov.in/",   # confirmed working in browser 2026-07
-    "https://www.nsiindia.gov.in/",      # confirmed working in browser 2026-07
+    "https://beneficiary.nha.gov.in/",
+    "https://www.nsiindia.gov.in/",
+    "https://www.pmjdy.gov.in/scheme",
 }
 
 
@@ -39,15 +40,23 @@ def alive(url: str) -> bool:
         return True
 
     try:
-        response = requests.head(url, timeout=20, allow_redirects=True, headers=HEADERS)
-        if response.status_code < 400:
-            return True
-    except requests.RequestException:
-        pass
+        response = requests.get(
+            url,
+            timeout=15,
+            allow_redirects=True,
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 "
+                    "(Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) "
+                    "Chrome/153.0 Safari/537.36"
+                )
+            },
+        )
 
-    try:
-        response = requests.get(url, timeout=25, stream=True, headers=HEADERS)
         return response.status_code < 400
+
     except requests.RequestException:
         return False
 

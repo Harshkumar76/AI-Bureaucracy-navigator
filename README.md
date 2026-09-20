@@ -3,97 +3,214 @@
 AI Bureaucracy Navigator is a FastAPI-based government-scheme discovery application that combines:
 
 - Structured user profiles
-- Scheme discovery via semantic retrieval
-- Deterministic eligibility checks
+- Semantic scheme retrieval using RAG
+- Deterministic eligibility evaluation
 - Document matching
-- Optional LLM-based extraction and summaries
-- PostgreSQL-backed persistence
+- Optional LLM-based profile extraction and explanations
+- PostgreSQL + pgvector persistence
+- JWT authentication
+- Server-Sent Events (SSE) for real-time pipeline progress
+- Evaluation tooling for retrieval, eligibility, explanations, recommendations, and classification
 
-The guiding rule is simple:
+The guiding principle is:
 
-> **RAG helps find likely schemes; the rule engine decides eligibility.**
+> **RAG helps find relevant schemes; the deterministic rule engine decides eligibility.**
 
 ---
 
 ## What the App Does
 
-The application lets a user enter a structured profile and optionally provide a free-text note. It then evaluates relevant schemes from a curated government-scheme catalogue.
+The application allows a user to enter a structured profile and optionally provide additional information as free text.
+
+The system then processes the profile through a multi-stage pipeline to identify potentially relevant government schemes and evaluate their eligibility conditions.
 
 The application returns:
 
-- Likely relevant schemes
-- Eligibility status: `eligible` / `possible` / `ineligible`
-- Reasons for each eligibility decision
-- Required and missing documents
+- Relevant scheme recommendations
+- Eligibility status:
+  - `eligible`
+  - `possible`
+  - `ineligible`
+- Reasons for eligibility decisions
+- Unknown or missing eligibility information
+- Required documents
+- Missing documents
 - Official scheme links
+- Application information
 - A final summary of the findings
+
+The current catalogue contains **30 government schemes**.
 
 ---
 
 ## Architecture
 
-The application is built around a multi-agent workflow:
+The application is built around a multi-agent workflow.
 
 ### 1. Intake Agent
 
-- Builds a structured profile from the form
-- Optionally extracts additional facts from the free-text note using the LLM
+The Intake Agent:
+
+- Builds a structured profile from the submitted form
+- Accepts optional free-text information
+- Uses the LLM only when additional fact extraction is required
+- Converts extracted information into the canonical `UserProfile`
+
+The structured form values take precedence over extracted free-text information.
+
+---
 
 ### 2. Discovery Agent
 
-- Applies structural/applicability checks to narrow the scheme catalogue
-- Ranks the remaining candidates using semantic similarity search over pgvector embeddings
+The Discovery Agent is responsible for finding potentially relevant schemes.
+
+It performs:
+
+1. Structural/applicability checks
+2. Semantic retrieval using vector embeddings
+3. Ranking of candidate schemes
+
+The semantic retrieval layer uses:
+
+- SentenceTransformers
+- `all-MiniLM-L6-v2`
+- PostgreSQL
+- pgvector
+- Vector similarity search
+
+The Discovery Agent produces a ranked candidate list.
+
+Importantly, retrieval does **not** determine eligibility.
+
+---
 
 ### 3. Eligibility Agent
 
-- Evaluates scheme rules against the structured profile
-- Returns `eligible`, `possible`, or `ineligible`
-- Records reasons and unknown fields
+The Eligibility Agent evaluates each candidate scheme against its deterministic rules.
 
-### 4. Documents Agent
-
-- Compares required scheme documents with documents already available to the user
-- Identifies missing documents
-
-### 5. Verification Agent
-
-- Attaches official scheme links
-- Provides verification metadata
-
-The pipeline streams progress to the frontend using **Server-Sent Events (SSE)**.
-
----
-
-## Core Principles
-
-- The LLM is optional and is used for fact extraction and summarization only.
-- Eligibility is decided by the deterministic rule engine in [`backend/rules.py`](backend/rules.py).
-- Retrieval is used for relevance ranking, not final eligibility.
-- The system separates probabilistic language-model behavior from deterministic eligibility logic.
-- The application is designed to be explainable and reproducible.
-
----
-
-## Tech Stack
-
-- Python
-- FastAPI
-- PostgreSQL
-- pgvector
-- Pydantic
-- JWT Authentication
-- SentenceTransformers
-- Optional OpenAI-compatible LLM integration
-- HTML
-- CSS
-- JavaScript
-- Server-Sent Events (SSE)
-
----
-
-## Repository Structure
+It returns one of:
 
 ```text
+eligible
+possible
+ineligible
+
+It also records:
+
+Failed conditions
+Unknown conditions
+Missing information
+
+The final eligibility decision is produced by backend/rules.py.
+
+The LLM does not make the final eligibility decision.
+
+4. Documents Agent
+
+The Documents Agent compares:
+
+Required scheme documents
+        +
+Documents already available
+        ↓
+Missing documents
+
+This allows the application to identify documents that may still be required before applying.
+
+5. Verification Agent
+
+The Verification Agent attaches scheme metadata including:
+
+Official scheme URL
+Application mode
+Last verification date
+Link verification status
+
+The project also contains an automated link checker with manual verification support for official portals that do not respond reliably to automated HTTP requests.
+
+Pipeline
+
+The complete workflow can be summarized as:
+
+User Profile
+     │
+     ▼
+Intake Agent
+     │
+     ▼
+Discovery Agent
+     │
+     ├── Applicability Checks
+     │
+     └── Semantic Retrieval
+             │
+             ▼
+       Ranked Candidates
+             │
+             ▼
+     Eligibility Agent
+             │
+             ▼
+     Documents Agent
+             │
+             ▼
+    Verification Agent
+             │
+             ▼
+       Final Summary
+
+The pipeline streams progress to the frontend using Server-Sent Events (SSE).
+
+Core Principles
+
+The project follows several important design principles:
+
+The LLM is optional.
+The LLM is used for extraction, explanation, and summarization.
+Eligibility is decided by deterministic rules.
+Semantic retrieval is used for relevance ranking.
+Retrieval and eligibility are intentionally separated.
+Unknown information is not silently treated as a successful condition.
+The system is designed to be deterministic, explainable, and reproducible where possible.
+
+The most important separation is:
+
+RAG
+↓
+Find relevant schemes
+
+Rule Engine
+↓
+Determine eligibility
+Tech Stack
+Backend
+Python
+FastAPI
+Pydantic
+PostgreSQL
+pgvector
+SentenceTransformers
+JWT Authentication
+Server-Sent Events (SSE)
+AI / ML
+SentenceTransformers
+sentence-transformers/all-MiniLM-L6-v2
+Optional OpenAI-compatible LLM
+TF-IDF
+One-vs-Rest Logistic Regression
+Frontend
+HTML
+CSS
+JavaScript
+Multilingual locale support
+Evaluation
+pytest
+Retrieval evaluation
+Eligibility evaluation
+Recommendation evaluation
+Explanation evaluation
+Multi-label classifier evaluation
+Repository Structure
 AI-Bureaucracy-navigator/
 
 ├── backend/
@@ -105,8 +222,10 @@ AI-Bureaucracy-navigator/
 │   │   ├── eligibility.py
 │   │   ├── intake.py
 │   │   └── verification.py
+│   │
 │   ├── data/
 │   │   └── schemes.json
+│   │
 │   ├── auth.py
 │   ├── database.py
 │   ├── embeddings.py
@@ -160,61 +279,40 @@ AI-Bureaucracy-navigator/
 ├── README.md
 ├── requirements.txt
 └── ...
-```
+Prerequisites
+Python 3.10+
+PostgreSQL
+pgvector PostgreSQL extension
+Git
+An LLM provider only if LLM-based extraction or explanations are required
 
----
+The core retrieval and deterministic eligibility workflow does not require an LLM.
 
-## Prerequisites
-
-- Python 3.10+
-- PostgreSQL with pgvector enabled
-- A local or cloud LLM provider only if you want automatic profile extraction or LLM-generated summaries
-
----
-
-## Setup
-
-### 1. Clone the Project
-
-```bash
+Setup
+1. Clone the Project
 git clone https://github.com/Harshkumar76/AI-Bureaucracy-navigator.git
 cd AI-Bureaucracy-navigator
-```
-
-### 2. Create and Activate a Virtual Environment
-
-#### Windows
-
-```bash
+2. Create a Virtual Environment
+Windows
 python -m venv .venv
 .venv\Scripts\activate
-```
-
-#### macOS/Linux
-
-```bash
+macOS/Linux
 python -m venv .venv
 source .venv/bin/activate
-```
-
-### 3. Install Dependencies
-
-```bash
+3. Install Dependencies
 pip install -r requirements.txt
-```
 
-If you plan to run the test suite, also install `pytest` and any additional evaluation dependencies required by the project.
+For testing:
 
----
+pip install pytest
+Environment Variables
 
-## Environment Variables
+Create a .env file in the project root.
 
-Create a `.env` file in the project root.
+Example:
 
-At minimum, configure PostgreSQL and JWT settings:
-
-```env
 DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/navigator
+
 JWT_SECRET=change-this-to-a-long-random-secret
 
 RAG_TOP_K=10
@@ -224,113 +322,85 @@ ENABLE_HNSW_INDEX=true
 LLM_API_KEY=your-api-key-if-using-llm
 LLM_BASE_URL=https://api.openai.com/v1
 LLM_MODEL=gpt-4o-mini
-```
+Environment Variable Notes
+Environment variables are loaded using python-dotenv.
+LLM variables are optional.
+DATABASE_URL must point to a valid PostgreSQL instance.
+JWT_SECRET should be a long random secret in production.
+Never commit .env.
+Never commit real API keys or database credentials.
+PostgreSQL + pgvector Setup
 
-### Environment Variable Notes
+Create the database:
 
-- The application reads environment variables using `python-dotenv`.
-- LLM variables are optional.
-- The application can perform its core scheme retrieval and eligibility workflow without an LLM.
-- `DATABASE_URL` must point to a valid PostgreSQL instance.
-- Never commit the real `.env` file or API keys to GitHub.
-- Replace the example `JWT_SECRET` with a long random secret in actual deployments.
-
----
-
-## PostgreSQL + pgvector Setup
-
-Create the database and enable the pgvector extension:
-
-```sql
 CREATE DATABASE navigator;
-```
 
-Then connect to the database:
+Connect to it:
 
-```sql
 \c navigator
-```
 
 Enable pgvector:
 
-```sql
 CREATE EXTENSION IF NOT EXISTS vector;
-```
 
 Initialize the application schema:
 
-```bash
 python scripts/setup_pgvector_schema.py
-```
 
 Seed the scheme catalogue:
 
-```bash
 python scripts/seed_schemes.py
-```
 
 Generate embeddings:
 
-```bash
 python scripts/generate_scheme_embeddings.py
-```
 
-Verify the generated embeddings:
+Verify embeddings:
 
-```bash
 python scripts/verify_embeddings.py
-```
+Retrieval-Augmented Generation (RAG)
 
----
+The application uses RAG-style semantic retrieval to identify schemes that are relevant to the user's profile.
 
-## Retrieval-Augmented Generation (RAG)
+The retrieval layer is responsible for ranking relevant candidates, not deciding eligibility.
 
-The application uses semantic retrieval to identify schemes that are relevant to a user's profile.
-
-### Embedding Model
+Embedding Model
 
 The project uses:
 
-```text
 sentence-transformers/all-MiniLM-L6-v2
-```
 
-The embeddings have:
+Embedding dimension:
 
-```text
-384 dimensions
-```
+384
 
 Embeddings are generated locally and stored in PostgreSQL using pgvector.
 
-### Retrieval Configuration
+This keeps the embedding step local instead of sending profile information to an external embedding API.
 
-The current retrieval configuration uses:
+Retrieval Configuration
 
-```text
+The current configuration is:
+
 RAG_TOP_K=10
 RAG_MIN_SIMILARITY=0.0
 ENABLE_HNSW_INDEX=true
-```
 
-The retrieval stage produces a ranked shortlist of relevant schemes.
+The retrieval stage produces a ranked shortlist of candidate schemes.
 
-Importantly:
+The project intentionally uses retrieval as a ranked candidate generator rather than as an eligibility filter.
 
-> **Semantic similarity does not determine eligibility.**
-
-The retrieved schemes are subsequently evaluated by the deterministic rule engine.
-
-### RAG Flow
-
-```text
+RAG Flow
 User Profile
      │
      ▼
 Profile / Query Representation
      │
      ▼
-SentenceTransformer Embedding
+SentenceTransformer
+     │
+     ▼
+384-Dimensional Embedding
      │
      ▼
 pgvector Similarity Search
@@ -343,302 +413,391 @@ Deterministic Rule Engine
      │
      ▼
 Eligibility Result
-```
+Retrieval vs Eligibility
 
----
+A central architectural decision is:
 
-## Eligibility Rule Engine
+RAG
+↓
+Which schemes appear relevant?
 
-Eligibility is handled by a deterministic rule engine in:
+Rule Engine
+↓
+Does the profile satisfy the scheme's rules?
 
-```text
+For example, a user may semantically resemble several agricultural schemes.
+
+That does not mean the user is eligible for all of them.
+
+The retrieved schemes are therefore passed to the deterministic rule engine for eligibility evaluation.
+
+Eligibility Rule Engine
+
+Eligibility is implemented in:
+
 backend/rules.py
-```
 
 The rule engine evaluates structured profile fields against scheme-specific rules.
 
-Supported rule categories include:
+Supported Rule Categories
 
-- Minimum age
-- Maximum age
-- Maximum income
-- Gender
-- Category
-- Occupation
-- Residence
-- Education level
-- Religion
-- Disability percentage
-- Marital status
-- Bank-account requirements
-- LPG connection requirements
-- Income-tax status
-- Government-employee status
-- BPL-card requirements
-- Cultivable-land requirements
-- Pucca-house requirements
-- Girl-child requirements
-- Breadwinner-related conditions
-- External verification requirements
+The current rule engine supports conditions including:
 
-### Tri-State Eligibility
+Minimum age
+Maximum age
+Maximum income
+Gender
+Category
+Occupation
+Residence
+Education level
+Religion
+Disability percentage
+Marital status
+Bank-account requirements
+LPG connection requirements
+Income-tax status
+Government-employee status
+BPL-card requirements
+Cultivable-land requirements
+Pucca-house requirements
+Girl-child requirements
+Breadwinner conditions
+External verification requirements
+Tri-State Eligibility
 
-The engine uses three possible eligibility states:
+The rule engine returns:
 
-```text
 eligible
 possible
 ineligible
-```
 
 The logic is:
 
-```text
 Any failed condition
         │
         ▼
     ineligible
-
 No failed condition
 but some information is unknown
         │
         ▼
      possible
-
 All required conditions pass
         │
         ▼
      eligible
-```
 
-This prevents incomplete information from being incorrectly treated as eligibility.
+This prevents incomplete profile information from automatically being treated as eligibility.
 
----
+Unknown Conditions
 
-## Eligibility and RAG Separation
-
-The project intentionally separates **retrieval** from **eligibility**.
+An unknown condition does not silently pass.
 
 For example:
 
-```text
-RAG:
-"Which schemes appear relevant to this user?"
+User profile
+    │
+    ├── Age = known
+    ├── Income = known
+    └── External verification = unknown
+                     │
+                     ▼
+                 possible
 
-        ↓
+This allows the application to distinguish between:
 
-Rule Engine:
-"Does this user's profile satisfy the scheme's eligibility conditions?"
+Definitely eligible
+Potentially eligible but requiring additional information
+Definitely ineligible
+Optional LLM Features
 
-        ↓
+The LLM layer is implemented in:
 
-Result:
-eligible / possible / ineligible
-```
+backend/llm.py
 
-This separation makes the final eligibility decision deterministic and easier to inspect and test.
+The LLM can be used for:
 
----
+Extracting structured facts from free-text profile notes
+Generating explanations
+Generating summaries
 
-## Optional LLM Features
+The LLM does not act as the final eligibility authority.
 
-The LLM layer is implemented in [`backend/llm.py`](backend/llm.py).
+The final eligibility decision is always produced by the deterministic rule engine.
 
-The LLM is used for:
+If an LLM API key is not configured, the core retrieval and deterministic eligibility workflow can continue without LLM-based features.
 
-- Extracting structured facts from the free-text profile note
-- Generating short summaries or explanations
+Authentication
 
-The LLM does **not** act as the final eligibility authority.
+The backend includes JWT-based authentication.
 
-The eligibility decision is still produced by the deterministic rule engine.
+Features include:
 
-If no LLM API key is configured, the LLM-dependent features can be disabled while the rest of the application continues to operate.
+Registration
+Login
+Logout
+Token revocation
+Protected routes
+Dependency-based authentication checks
 
----
+Authentication is kept separate from the retrieval and eligibility logic.
 
-## Authentication
-
-The backend includes JWT-based authentication with:
-
-- Registration
-- Login
-- Logout
-- Token revocation
-- Protected routes
-- Dependency-based authentication checks
-
-Authentication is kept separate from the scheme retrieval and eligibility logic.
-
----
-
-## Documents
+Documents
 
 The Documents Agent compares:
 
-```text
-Required scheme documents
-        +
-Documents already available to the user
-        ↓
-Missing documents
-```
+Required Scheme Documents
+          +
+Documents Available to User
+          │
+          ▼
+    Missing Documents
 
-This allows the application to show users which documents may still be required for a scheme.
+This allows the application to tell the user which documents may still be required.
 
----
-
-## Verification
+Verification
 
 The Verification Agent attaches scheme metadata including:
 
-- Official scheme URL
-- Application mode
-- Last verification information
-- Link status where available
+Official scheme URL
+Application mode
+Last verification information
+Link status
 
-The application is intended to help users discover schemes, but users should still verify current requirements and application information through the relevant official government source.
+The project contains an automated link-checking script:
 
----
+python scripts/check_links.py --stamp
 
-## Classifier Experiment
+The current catalogue contains:
 
-The project also contains an experimental multi-label classifier used to investigate whether structured profile eligibility labels can be approximated using a lightweight machine-learning model.
+30 schemes
+30/30 links passing verification checks
 
-The experiment uses:
+Some official government portals may not respond reliably to automated HTTP requests. These are handled through explicit manual verification rather than changing a valid government URL simply to satisfy an automated checker.
 
-- TF-IDF features
-- Unigram and bigram features
-- One-vs-Rest Logistic Regression
-- Deterministic rule-engine labels as ground truth
-- A fixed train/test split
-- Micro, macro, and weighted precision/recall/F1
-- Exact label-set match
-- Hamming loss
+Users should still verify current scheme requirements and application instructions through the relevant official government source before applying.
 
-### Synthetic Dataset
+Classifier Experiment
 
-The classifier experiment uses a synthetic dataset containing:
+The project contains an experimental multi-label classifier.
 
-```text
-520 profiles
+The purpose of the experiment is to investigate whether structured eligibility labels can be approximated from natural-language user profiles using a lightweight machine-learning model.
+
+The classifier is not the production eligibility authority.
+
+Classifier Pipeline
+Synthetic Structured Profiles
+            │
+            ▼
+Deterministic Rule Engine
+            │
+            ▼
+Ground-Truth Eligibility Labels
+            │
+            ▼
+Natural-Language Profile Text
+            │
+            ▼
+TF-IDF
+            │
+            ▼
+One-vs-Rest Logistic Regression
+            │
+            ▼
+Predicted Scheme Labels
+Model
+
+The classifier uses:
+
+TF-IDF
+Unigram features
+Bigram features
+One-vs-Rest Logistic Regression
+Class balancing
+A fixed random seed
+A fixed train/test split
+
+The classifier uses deterministic rule-engine outputs as ground truth.
+
+The LLM is not used to generate the labels.
+
+It may only be used to convert structured synthetic profiles into natural-language descriptions.
+
+Synthetic Dataset
+
+The experiment contains:
+
+520 synthetic profiles
 26 targetable schemes
-```
 
-Four schemes are excluded from the synthetic classifier experiment because their remaining eligibility logic depends only on external verification and therefore cannot be reliably inferred from a generated user profile.
+Four schemes are excluded from the classifier experiment because their remaining eligibility logic depends only on external verification and therefore cannot be reliably inferred from a generated profile.
 
-The labels are generated from the deterministic rule engine rather than from LLM judgments.
+The dataset contains targeted synthetic profiles designed around scheme eligibility conditions.
 
-The LLM may be used to rewrite structured synthetic profiles into natural-language descriptions, but it does not determine the ground-truth labels.
+Baseline Classifier Results
 
-### Classifier Role
+Using the fixed held-out test set:
 
-The classifier is an experimental approximation/shortlisting mechanism.
+Test profiles: 130
+Targetable schemes: 26
 
-It does **not** replace the production rule engine.
+Baseline classifier results:
+
+Metric	Score
+Micro Precision	0.741
+Micro Recall	0.895
+Micro F1	0.811
+Macro Precision	0.660
+Macro Recall	0.843
+Macro F1	0.718
+Weighted F1	0.830
+Exact Label-Set Match	0.223
+Hamming Loss	0.057
+
+These results are a baseline for the experimental classifier and should not be interpreted as production eligibility accuracy.
+
+The deterministic rule engine remains the production source of truth.
+
+Classifier Role
+
+The classifier is intended as an experimental approximation or possible shortlisting mechanism.
+
+It does not replace the production rule engine.
 
 The production architecture remains:
 
-```text
-Profile
-   │
-   ├── Semantic Retrieval
-   │
-   └── Deterministic Eligibility Rules
+User Profile
+     │
+     ├── Semantic Retrieval
+     │
+     └── Deterministic Eligibility Rules
                     │
                     ▼
           Final Eligibility Result
-```
 
----
+A future architecture could investigate:
 
-## Evaluation
+Profile
+   │
+   ▼
+Lightweight Classifier
+   │
+   ├── High Confidence
+   │       │
+   │       ▼
+   │   Candidate Shortlist
+   │
+   └── Low Confidence
+           │
+           ▼
+       LLM Extraction
+           │
+           ▼
+   Deterministic Rule Engine
 
-The project contains evaluation scripts covering multiple parts of the system.
+This remains an experimental direction rather than the current production pipeline.
+
+LLM vs Classifier Evaluation
+
+The project also includes an evaluation script for comparing:
+
+LLM extraction → deterministic rules
+
+against:
+
+TF-IDF classifier
+
+The important fairness principle is that both approaches are evaluated against the same deterministic ground-truth labels.
+
+The LLM does not generate the ground truth.
+
+The experiment measures:
+
+Precision
+Recall
+F1
+Exact label-set match
+Hamming loss
+Latency
+API usage
+
+A cached LLM result is treated separately from a fresh API call when interpreting latency measurements.
+
+Evaluation
+
+The project contains evaluation tooling for multiple parts of the system.
 
 Evaluation areas include:
 
-- Retrieval quality
-- Eligibility accuracy
-- Recommendation quality
-- Explanation quality
-- End-to-end behavior
-- Classifier performance
+Retrieval quality
+Eligibility evaluation
+Recommendation quality
+Explanation quality
+End-to-end behavior
+Classifier performance
+Latency measurements
 
 The evaluation framework uses deterministic rule-engine outputs where appropriate so that eligibility evaluation does not depend on an LLM making the final decision.
 
----
+Testing
 
-## Testing
+The project contains pytest-based tests for:
 
-The project contains pytest-based tests for retrieval, rule evaluation, metrics, and end-to-end behavior.
+Retrieval
+Rule evaluation
+Metrics
+RAG/rule interaction
+Evaluation
+End-to-end pipeline behavior
 
 Run the complete test suite:
 
-```bash
 pytest
-```
 
 Run individual test files:
 
-```bash
 pytest tests/test_retrieval.py
-```
-
-```bash
 pytest tests/test_rule_engine.py
-```
-
-```bash
 pytest tests/test_full_pipeline.py
-```
-
----
-
-## Run the Backend
+Run the Backend
 
 Start the FastAPI development server:
 
-```bash
 uvicorn backend.main:app --reload
-```
 
-The backend is available at:
+Backend:
 
-```text
 http://localhost:8000
-```
 
 Swagger API documentation:
 
-```text
 http://localhost:8000/docs
-```
+Frontend
 
----
+The frontend is implemented using:
 
-## Frontend
+HTML
+CSS
+JavaScript
 
-The frontend is implemented as a static HTML/CSS/JavaScript application and is served through the FastAPI backend.
+It is served through the FastAPI backend.
 
-The project includes:
+The application includes:
 
-- Sign-in page
-- Scheme discovery flow
-- Scheme detail page
-- Multilingual locale support
-- Eligibility result presentation
-- Document status information
+Landing page
+Sign-in page
+Scheme discovery flow
+Scheme detail page
+Eligibility result presentation
+Document status information
+Multilingual locale support
+SSE Progress Streaming
 
----
+The application uses Server-Sent Events (SSE) to stream progress from the backend while the pipeline executes.
 
-## SSE Progress Streaming
+Simplified flow:
 
-The application uses **Server-Sent Events (SSE)** to stream progress from the backend while the multi-stage pipeline executes.
-
-A simplified workflow is:
-
-```text
 Client
   │
   ▼
@@ -654,133 +813,137 @@ FastAPI Pipeline
   └── Verification
           │
           ▼
-     SSE Events
+      SSE Events
           │
           ▼
        Frontend
-```
 
-This allows the frontend to display progress while the pipeline is running instead of waiting for the entire process to finish.
+This allows the frontend to display pipeline progress without waiting for the entire workflow to complete.
 
----
+Important Design Decisions
+1. Retrieval Is Not Eligibility
 
-## Important Design Decisions
+Vector similarity is useful for discovering semantically relevant schemes.
 
-### Retrieval Is Not Eligibility
-
-Vector similarity is useful for discovering semantically relevant schemes, but similarity alone cannot establish legal or policy eligibility.
+It cannot by itself establish eligibility.
 
 Therefore:
 
-```text
 Retrieval → relevance
 Rules → eligibility
-```
+2. Deterministic Eligibility
 
-### Deterministic Eligibility
-
-The eligibility engine uses explicit rules rather than allowing an LLM to directly decide whether a user qualifies.
+The eligibility engine uses explicit rules instead of allowing an LLM to directly determine whether a user qualifies.
 
 This makes the decision process:
 
-- Deterministic
-- Testable
-- Explainable
-- Reproducible
-
-### Unknown Information
+Deterministic
+Testable
+Explainable
+Reproducible
+3. Unknown Information
 
 If a required condition cannot be determined from the available profile, the system can return:
 
-```text
 possible
-```
 
 rather than incorrectly returning:
 
-```text
 eligible
-```
-
-### Optional LLM
+4. Optional LLM
 
 The LLM is treated as an optional layer for:
 
-- Free-text extraction
-- Explanation
-- Summarization
+Free-text extraction
+Explanation
+Summarization
 
 The core eligibility workflow does not depend on an LLM making the final decision.
 
----
+5. Ranked Retrieval
 
-## Important Caveats
+The RAG layer is designed to produce a ranked shortlist rather than act as a hard eligibility filter.
 
-- The application requires PostgreSQL and pgvector for the database-backed retrieval workflow.
-- Retrieval uses embedding similarity to rank potentially relevant schemes.
-- Final eligibility comes from the deterministic rule engine.
-- Scheme-specific rules are stored in the scheme dataset and evaluated by [`backend/rules.py`](backend/rules.py).
-- Some eligibility conditions require additional external verification.
-- An incomplete profile may therefore result in a `possible` status.
-- Government schemes and eligibility requirements can change over time.
-- Users should verify current requirements and application instructions through the relevant official government source before applying.
+Conceptually:
 
----
+All Schemes
+     │
+     ▼
+Applicability / Structural Checks
+     │
+     ▼
+Semantic Retrieval
+     │
+     ▼
+Top-K Ranked Candidates
+     │
+     ▼
+Deterministic Eligibility
 
-## Security
+This allows semantic similarity to assist discovery without overriding explicit eligibility rules.
+
+Important Caveats
+The application requires PostgreSQL and pgvector for the database-backed retrieval workflow.
+Retrieval uses embedding similarity to rank potentially relevant schemes.
+Semantic similarity does not establish eligibility.
+Final eligibility comes from the deterministic rule engine.
+Scheme-specific rules are stored in the scheme dataset and evaluated by backend/rules.py.
+Some eligibility conditions require additional external verification.
+An incomplete profile may result in a possible status.
+Government schemes and eligibility requirements can change over time.
+Official URLs can change or become temporarily unavailable.
+Users should verify current requirements and application instructions through the relevant official government source before applying.
+Security
 
 Do not commit sensitive credentials to the repository.
 
-The following should remain local or be provided through secure deployment configuration:
+The following should remain local or be supplied through secure deployment configuration:
 
-```text
 .env
 LLM_API_KEY
 DATABASE_URL credentials
 JWT_SECRET
-```
 
-The repository should contain only safe placeholders such as:
+The repository should contain only safe placeholders:
 
-```env
 DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/navigator
+
 JWT_SECRET=change-this-to-a-long-random-secret
-```
 
----
+Never commit:
 
-## Future Improvements
+API keys
+Database passwords
+Production JWT secrets
+Personal credentials
+Future Improvements
 
 Potential future improvements include:
 
-- Better retrieval evaluation with larger query sets
-- Improved multilingual retrieval
-- More comprehensive scheme coverage
-- Better handling of incomplete profiles
-- More robust external verification workflows
-- Improved classifier calibration
-- Confidence-aware classifier/LLM routing
-- Additional automated link verification
-- Expanded integration and end-to-end tests
-- More detailed evaluation of explanation grounding
-
----
-
-## License and Contribution
+Larger retrieval evaluation datasets
+Improved multilingual retrieval
+More comprehensive scheme coverage
+Better handling of incomplete profiles
+More robust external verification workflows
+Improved classifier calibration
+Confidence-aware classifier/LLM routing
+More robust automated link verification
+Expanded integration tests
+More detailed explanation-grounding evaluation
+Improved production observability
+Better latency and cost benchmarking
+License and Contribution
 
 This project is intended for educational and practical use in government-scheme discovery workflows.
 
 It is not a substitute for official government verification or legal advice.
 
-If you are working on the project locally, keep the scheme dataset and rule engine consistent so that retrieval and eligibility logic remain aligned.
+When modifying the project, keep the scheme dataset, embeddings, and deterministic rule engine consistent so that retrieval and eligibility logic remain aligned.
 
----
+Key Takeaway
 
-## Key Takeaway
+The central architecture of AI Bureaucracy Navigator is:
 
-The central design of AI Bureaucracy Navigator is:
-
-```text
 Structured Profile
         │
         ▼
@@ -803,17 +966,23 @@ Documents + Verification
         │
         ▼
 Final User Summary
-```
 
-The project deliberately combines **AI-based semantic retrieval** with **deterministic rule-based decision making**, keeping the final eligibility logic transparent and reproducible.
+The project deliberately combines:
 
----
+AI-based semantic retrieval
+          +
+Deterministic rule-based decision making
 
-## Author
+The result is a system where AI assists with understanding and discovery, while the final eligibility logic remains transparent, deterministic, and reproducible.
 
-**Harsh Kumar**
+Author
+
+Harsh Kumar
 
 B.Tech CSE (AI)
 
-GitHub:  
+GitHub:
+
 https://github.com/Harshkumar76/AI-Bureaucracy-navigator
+
+

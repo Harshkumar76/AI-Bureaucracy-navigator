@@ -2,7 +2,7 @@
   "dataset": {
     "total_examples": 520,
     "test_examples": 130,
-    "evaluated_examples": 0,
+    "evaluated_examples": 130,
     "number_of_labels": 26,
     "labels": [
       "apy",
@@ -35,25 +35,54 @@
     "seed": 42
   },
   "llm_operational_statistics": {
-    "examples_attempted": 0,
-    "successful_evaluations": 0,
+    "examples_attempted": 130,
+    "successful_evaluations": 130,
     "failed_evaluations": 0,
-    "success_rate": 0,
-    "failure_rate": 0,
-    "cache_hits": 0,
-    "cache_hit_rate": 0,
+    "success_rate": 1.0,
+    "failure_rate": 0.0,
+    "cache_hits": 130,
+    "cache_hit_rate": 1.0,
     "api_failures": 0,
     "rate_limit_failures": 0,
     "validation_failures": 0
   },
   "quality_metrics": {
-    "llm_evaluated_examples": 0,
-    "classifier_evaluated_examples": 0,
-    "llm": null,
-    "classifier": null
+    "llm_evaluated_examples": 130,
+    "classifier_evaluated_examples": 130,
+    "llm": {
+      "micro_precision": 1.0,
+      "micro_recall": 0.9956427015250545,
+      "micro_f1": 0.9978165938864629,
+      "macro_precision": 1.0,
+      "macro_recall": 0.9888111888111889,
+      "macro_f1": 0.9938949938949939,
+      "weighted_precision": 1.0,
+      "weighted_recall": 0.9956427015250545,
+      "weighted_f1": 0.9976484420928866,
+      "exact_match": 0.9923076923076923,
+      "hamming_loss": 0.000591715976331361
+    },
+    "classifier": {
+      "micro_precision": 0.7405405405405405,
+      "micro_recall": 0.8954248366013072,
+      "micro_f1": 0.8106508875739645,
+      "macro_precision": 0.6599748645470445,
+      "macro_recall": 0.8425974389728114,
+      "macro_f1": 0.7176461499962102,
+      "weighted_precision": 0.791822713402141,
+      "weighted_recall": 0.8954248366013072,
+      "weighted_f1": 0.8297336764967898,
+      "exact_match": 0.2230769230769231,
+      "hamming_loss": 0.05680473372781065
+    }
   },
   "latency": {
     "llm_api": null,
-    "classifier_inference": null
+    "classifier_inference": {
+      "count": 130,
+      "average_ms": 3.7016746154851994,
+      "median_ms": 3.583200006687548,
+      "p95_ms": 5.026964997523464
+    }
   }
 }
