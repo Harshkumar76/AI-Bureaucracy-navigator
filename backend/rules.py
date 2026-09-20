@@ -10,7 +10,9 @@ pass / fail / unknown against the nullable user profile:
 The LLM never decides eligibility — it only explains these results.
 That keeps outcomes consistent, explainable, and cheap.
 """
+
 from typing import Optional, Tuple
+
 
 FIELD_LABELS = {
     "age": "your age",
@@ -27,11 +29,31 @@ FIELD_LABELS = {
     "owns_cultivable_land": "whether your family owns cultivable land",
     "owns_pucca_house": "whether your family owns a pucca house",
     "has_girl_child_under_10": "whether you have a girl child under 10",
+
+    # New eligibility fields
+    "has_bank_account": "whether you have a bank/post-office account",
+    "has_lpg_connection": "whether your household has an LPG connection",
+    "income_tax_payer": "whether you are an income-tax payer",
+    "government_employee": "whether you are a government employee",
+    "breadwinner_deceased": "whether the primary breadwinner has died",
+    "breadwinner_age": "the age of the primary breadwinner",
+    "class_level": "your current class level",
+    "academic_percentage": "your academic percentage",
+    "receives_other_scholarship": "whether you receive another scholarship",
+    "artisan_trade": "your artisan trade",
+    "street_vendor": "whether you are a street vendor",
+    "existing_business": "whether you already have a business",
+    "external_verification": "official scheme eligibility verification",
 }
 
+
 EDUCATION_LABELS = {
-    "below_10th": "below 10th", "10th_pass": "10th pass", "12th_pass": "12th pass",
-    "ug": "undergraduate", "pg": "postgraduate", "not_studying": "not studying",
+    "below_10th": "below 10th",
+    "10th_pass": "10th pass",
+    "12th_pass": "12th pass",
+    "ug": "undergraduate",
+    "pg": "postgraduate",
+    "not_studying": "not studying",
 }
 
 
@@ -47,102 +69,329 @@ def _check(profile, key: str, expected) -> Tuple[Optional[bool], str, str]:
         if p.age is None:
             return None, f"needs age ≥ {expected}", "age"
         ok = p.age >= expected
-        return ok, f"age {p.age} {'meets' if ok else 'is below'} the minimum of {expected}", "age"
+        return (
+            ok,
+            f"age {p.age} {'meets' if ok else 'is below'} the minimum of {expected}",
+            "age",
+        )
 
     if key == "max_age":
         if p.age is None:
             return None, f"needs age ≤ {expected}", "age"
         ok = p.age <= expected
-        return ok, f"age {p.age} {'is within' if ok else 'exceeds'} the limit of {expected}", "age"
+        return (
+            ok,
+            f"age {p.age} {'is within' if ok else 'exceeds'} the limit of {expected}",
+            "age",
+        )
 
     if key == "max_income":
         if p.annual_income is None:
             return None, f"needs family income ≤ {_inr(expected)}", "annual_income"
         ok = p.annual_income <= expected
-        return ok, (f"income {_inr(p.annual_income)} is under the {_inr(expected)} limit" if ok
-                    else f"income {_inr(p.annual_income)} exceeds the {_inr(expected)} limit"), "annual_income"
+        return (
+            ok,
+            (
+                f"income {_inr(p.annual_income)} is under the {_inr(expected)} limit"
+                if ok
+                else f"income {_inr(p.annual_income)} exceeds the {_inr(expected)} limit"
+            ),
+            "annual_income",
+        )
 
     if key == "gender":
         if p.gender is None:
             return None, f"is for {expected} applicants", "gender"
         ok = p.gender == expected
-        return ok, (f"open to {expected} applicants" if ok
-                    else f"only for {expected} applicants"), "gender"
+        return (
+            ok,
+            f"open to {expected} applicants" if ok else f"only for {expected} applicants",
+            "gender",
+        )
 
     if key == "category_in":
         if p.category is None:
             return None, f"is for {'/'.join(expected)} category", "category"
         ok = p.category in expected
-        return ok, (f"{p.category} category qualifies" if ok
-                    else f"only for {'/'.join(expected)} category (you selected {p.category})"), "category"
+        return (
+            ok,
+            (
+                f"{p.category} category qualifies"
+                if ok
+                else f"only for {'/'.join(expected)} category (you selected {p.category})"
+            ),
+            "category",
+        )
 
     if key == "occupation_in":
         if p.occupation is None:
             return None, f"is for {'/'.join(expected)}", "occupation"
         ok = p.occupation in expected
-        return ok, (f"occupation '{p.occupation}' qualifies" if ok
-                    else f"meant for {'/'.join(expected)}"), "occupation"
+        return (
+            ok,
+            f"occupation '{p.occupation}' qualifies"
+            if ok
+            else f"meant for {'/'.join(expected)}",
+            "occupation",
+        )
 
     if key == "residence":
         if p.residence is None:
             return None, f"is for {expected} areas", "residence"
         ok = p.residence == expected
-        return ok, (f"{expected} residence qualifies" if ok
-                    else f"only for {expected} areas"), "residence"
+        return (
+            ok,
+            f"{expected} residence qualifies" if ok else f"only for {expected} areas",
+            "residence",
+        )
 
     if key == "education_in":
         labels = "/".join(EDUCATION_LABELS.get(e, e) for e in expected)
         if p.education_level is None:
             return None, f"is for {labels} students", "education_level"
         ok = p.education_level in expected
-        return ok, (f"education level qualifies" if ok
-                    else f"meant for {labels} students"), "education_level"
+        return (
+            ok,
+            "education level qualifies" if ok else f"meant for {labels} students",
+            "education_level",
+        )
 
     if key == "religion_in":
         if p.religion is None:
             return None, f"is for {'/'.join(expected)} communities", "religion"
         ok = p.religion in expected
-        return ok, (f"{p.religion} community qualifies" if ok
-                    else f"only for notified minority communities ({'/'.join(expected)})"), "religion"
+        return (
+            ok,
+            (
+                f"{p.religion} community qualifies"
+                if ok
+                else f"only for notified minority communities ({'/'.join(expected)})"
+            ),
+            "religion",
+        )
 
     if key == "min_disability_pct":
         if p.disability_pct is None:
             return None, f"needs benchmark disability ≥ {expected}%", "disability_pct"
         ok = p.disability_pct >= expected
-        return ok, (f"disability {p.disability_pct}% meets the {expected}% benchmark" if ok
-                    else f"needs ≥ {expected}% benchmark disability"), "disability_pct"
+        return (
+            ok,
+            (
+                f"disability {p.disability_pct}% meets the {expected}% benchmark"
+                if ok
+                else f"needs ≥ {expected}% benchmark disability"
+            ),
+            "disability_pct",
+        )
 
     if key == "marital_status_in":
         if p.marital_status is None:
             return None, f"is for {'/'.join(expected)} applicants", "marital_status"
         ok = p.marital_status in expected
-        return ok, (f"marital status qualifies" if ok
-                    else f"only for {'/'.join(expected)} applicants"), "marital_status"
+        return (
+            ok,
+            (
+                "marital status qualifies"
+                if ok
+                else f"only for {'/'.join(expected)} applicants"
+            ),
+            "marital_status",
+        )
 
-    # boolean requirements: requires_bpl_card, requires_cultivable_land, ...
+    if key == "requires_bank_account":
+        if p.has_bank_account is None:
+            return (
+                None,
+                "Bank/post-office account status is unknown.",
+                "has_bank_account",
+            )
+        if expected and p.has_bank_account is not True:
+            return (
+                False,
+                "A bank/post-office account is required.",
+                "has_bank_account",
+            )
+        return (
+            True,
+            "requirement met: applicant has a bank/post-office account",
+            "has_bank_account",
+        )
+
+    if key == "requires_no_lpg_connection":
+        if p.has_lpg_connection is None:
+            return (
+                None,
+                "Existing LPG connection status is unknown.",
+                "has_lpg_connection",
+            )
+        if expected and p.has_lpg_connection is not False:
+            return (
+                False,
+                "An existing household LPG connection prevents eligibility.",
+                "has_lpg_connection",
+            )
+        return (
+            True,
+            "requirement met: household has no existing LPG connection",
+            "has_lpg_connection",
+        )
+
+    if key == "requires_no_income_tax":
+        if p.income_tax_payer is None:
+            return (
+                None,
+                "Income-tax-payer status is unknown.",
+                "income_tax_payer",
+            )
+        if expected and p.income_tax_payer is not False:
+            return (
+                False,
+                "Income-tax payer status does not satisfy this scheme's condition.",
+                "income_tax_payer",
+            )
+        return (
+            True,
+            "requirement met: applicant is not an income-tax payer",
+            "income_tax_payer",
+        )
+
+    if key == "requires_not_government_employee":
+        if p.government_employee is None:
+            return (
+                None,
+                "Government employment status is unknown.",
+                "government_employee",
+            )
+        if expected and p.government_employee is not False:
+            return (
+                False,
+                "Government employment does not satisfy this scheme's condition.",
+                "government_employee",
+            )
+        return (
+            True,
+            "requirement met: applicant is not a government employee",
+            "government_employee",
+        )
+
+    if key == "requires_breadwinner_death":
+        if p.breadwinner_deceased is None:
+            return (
+                None,
+                "needs to know whether the primary breadwinner has died",
+                "breadwinner_deceased",
+            )
+        if p.breadwinner_deceased is not True:
+            return (
+                False,
+                "requirement not met: primary breadwinner has died",
+                "breadwinner_deceased",
+            )
+        return (
+            True,
+            "requirement met: primary breadwinner has died",
+            "breadwinner_deceased",
+        )
+
+    if key == "min_breadwinner_age":
+        if p.breadwinner_age is None:
+            return (
+                None,
+                f"needs primary breadwinner age ≥ {expected}",
+                "breadwinner_age",
+            )
+
+        if p.breadwinner_age < int(expected):
+            return (
+                False,
+                f"primary breadwinner age is below the minimum of {expected}",
+                "breadwinner_age",
+            )
+
+        return (
+            True,
+            f"requirement met: primary breadwinner age is at least {expected}",
+            "breadwinner_age",
+        )
+
+    if key == "max_breadwinner_age":
+        if p.breadwinner_age is None:
+            return (
+                None,
+                f"needs primary breadwinner age ≤ {expected}",
+                "breadwinner_age",
+            )
+
+        if p.breadwinner_age > int(expected):
+            return (
+                False,
+                f"primary breadwinner age exceeds the maximum of {expected}",
+                "breadwinner_age",
+            )
+
+        return (
+            True,
+            f"requirement met: primary breadwinner age is at most {expected}",
+            "breadwinner_age",
+        )
+
+    if key == "requires_external_verification":
+        return (
+            None,
+            "Final eligibility requires verification against the scheme's criteria",
+            "external_verification",
+        )
+
+    # Boolean requirements
     BOOL_RULES = {
-        "requires_bpl_card": ("has_bpl_card", True, "a BPL/priority ration card"),
-        "requires_cultivable_land": ("owns_cultivable_land", True, "cultivable land in the family's name"),
-        "requires_no_pucca_house": ("owns_pucca_house", False, "not owning a pucca house"),
-        "requires_girl_child_under_10": ("has_girl_child_under_10", True, "a girl child under 10 years"),
+        "requires_bpl_card": (
+            "has_bpl_card",
+            True,
+            "a BPL/priority ration card",
+        ),
+        "requires_cultivable_land": (
+            "owns_cultivable_land",
+            True,
+            "cultivable land in the family's name",
+        ),
+        "requires_no_pucca_house": (
+            "owns_pucca_house",
+            False,
+            "not owning a pucca house",
+        ),
+        "requires_girl_child_under_10": (
+            "has_girl_child_under_10",
+            True,
+            "a girl child under 10 years",
+        ),
     }
+
     if key in BOOL_RULES:
         field, want, label = BOOL_RULES[key]
         val = getattr(p, field)
+
         if val is None:
             return None, f"requires {label}", field
-        ok = val is want
-        return ok, (f"requirement met: {label}" if ok else f"requires {label}"), field
 
-    # unrecognised rule keys are treated as unknown, never silently passed
+        ok = val is want
+        return (
+            ok,
+            f"requirement met: {label}" if ok else f"requires {label}",
+            field,
+        )
+
+    # Unrecognised rule keys are treated as unknown, never silently passed.
     return None, f"has an unrecognised condition '{key}'", key
 
 
 def describe_rules(rules: dict) -> list:
     """Human-readable eligibility criteria for a scheme's detail page,
-    written without reference to any user profile."""
+    written without reference to any user profile.
+    """
     out = []
+
     min_age, max_age = rules.get("min_age"), rules.get("max_age")
+
     if min_age is not None and max_age is not None:
         out.append(f"Age between {min_age} and {max_age} years")
     elif min_age is not None:
@@ -153,51 +402,123 @@ def describe_rules(rules: dict) -> list:
     for key, expected in rules.items():
         if key in ("min_age", "max_age"):
             continue
+
         if key == "max_income":
             out.append(f"Annual family income up to {_inr(expected)}")
+
         elif key == "gender":
             out.append(f"For {expected} applicants")
+
         elif key == "category_in":
             out.append(f"For {'/'.join(expected)} category")
+
         elif key == "occupation_in":
-            out.append("For " + "/".join(e.replace("_", " ") for e in expected))
+            out.append(
+                "For " + "/".join(e.replace("_", " ") for e in expected)
+            )
+
         elif key == "residence":
             out.append(f"For residents of {expected} areas")
+
         elif key == "education_in":
-            out.append("Studying at " + "/".join(EDUCATION_LABELS.get(e, e) for e in expected) + " level")
+            out.append(
+                "Studying at "
+                + "/".join(EDUCATION_LABELS.get(e, e) for e in expected)
+                + " level"
+            )
+
         elif key == "religion_in":
-            out.append(f"For notified minority communities ({', '.join(expected)})")
+            out.append(
+                f"For notified minority communities ({', '.join(expected)})"
+            )
+
         elif key == "min_disability_pct":
             out.append(f"Benchmark disability of {expected}% or more")
+
         elif key == "marital_status_in":
             out.append(f"For {'/'.join(expected)} applicants")
+
         elif key == "requires_bpl_card":
             out.append("Household holds a BPL / priority ration card")
+
         elif key == "requires_cultivable_land":
             out.append("Family owns cultivable land")
+
         elif key == "requires_no_pucca_house":
             out.append("Family does not own a pucca house")
+
         elif key == "requires_girl_child_under_10":
             out.append("Family has a girl child below 10 years")
+
+        elif key == "requires_bank_account":
+            if expected:
+                out.append("Applicant has a bank / post-office account")
+
+        elif key == "requires_no_lpg_connection":
+            if expected:
+                out.append(
+                    "Household does not already have an LPG connection"
+                )
+
+        elif key == "requires_no_income_tax":
+            if expected:
+                out.append("Applicant is not an income-tax payer")
+
+        elif key == "requires_not_government_employee":
+            if expected:
+                out.append("Applicant is not a government employee")
+
+        elif key == "requires_breadwinner_death":
+            if expected:
+                out.append("Primary breadwinner has died")
+
+        elif key == "min_breadwinner_age":
+            out.append(
+                f"Primary breadwinner was at least {expected} years old"
+            )
+
+        elif key == "max_breadwinner_age":
+            out.append(
+                f"Primary breadwinner was at most {expected} years old"
+            )
+
+        elif key == "requires_external_verification":
+            out.append(
+                "Final eligibility requires verification against the scheme's criteria"
+            )
+
     return out
 
 
 def evaluate(profile, rules: dict):
-    """-> (status, reasons[], unknown_fields[])"""
+    """Return (status, reasons[], unknown_fields[])."""
     reasons, unknowns = [], []
     failed = False
+
     for key, expected in rules.items():
         result, reason, field = _check(profile, key, expected)
+
         if result is True:
             reasons.append("✓ " + reason)
+
         elif result is False:
             failed = True
             reasons.append("✗ " + reason)
+
         else:
-            unknowns.append(field)
-            reasons.append("? " + reason + f" — tell us {FIELD_LABELS.get(field, field)}")
+            if field not in unknowns:
+                unknowns.append(field)
+
+            reasons.append(
+                "? "
+                + reason
+                + f" — tell us {FIELD_LABELS.get(field, field)}"
+            )
+
     if failed:
         return "ineligible", reasons, unknowns
+
     if unknowns:
         return "possible", reasons, unknowns
+
     return "eligible", reasons, unknowns

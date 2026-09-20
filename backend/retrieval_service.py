@@ -5,6 +5,7 @@ fallback implementation when pgvector-backed embeddings are not yet available.
 """
 from __future__ import annotations
 
+import os
 import re
 from collections import Counter
 from typing import Any
@@ -16,10 +17,18 @@ _TOKEN_RE = re.compile(r"[A-Za-z0-9]+(?:[\'’][A-Za-z0-9]+)?")
 
 
 class RetrievalService:
-    def __init__(self, conn: Any, top_k: int = 5, min_similarity: float = 0.1):
+    def __init__(self, conn: Any, top_k: int | None = None, min_similarity: float | None = None,):
         self.conn = conn
-        self.top_k = top_k
-        self.min_similarity = min_similarity
+        self.top_k =(
+            top_k
+            if top_k is not None
+            else int(os.getenv("RAG_TOP_K", "5"))
+        )
+        self.min_similarity =(
+            min_similarity
+            if min_similarity is not None
+            else float(os.getenv("RAG_MIN_SIMILARITY", "0.1"))
+        )   
         self.embedding_service = get_embedding_service()
 
     def retrieve(self, query: str, top_k: int | None = None, min_similarity: float | None = None):

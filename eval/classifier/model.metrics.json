@@ -1,0 +1,308 @@
+{
+  "dataset": "eval\\classifier\\synthetic_dataset.jsonl",
+  "n_examples": 520,
+  "n_train": 390,
+  "n_test": 130,
+  "n_labels": 26,
+  "labels": [
+    "apy",
+    "csss",
+    "ddu-gky",
+    "ignoaps",
+    "jss",
+    "minority-post-matric",
+    "naps-2",
+    "nfbs",
+    "nmmss",
+    "pm-kisan",
+    "pm-kisan-maandhan",
+    "pm-kusum",
+    "pm-svanidhi",
+    "pm-sym",
+    "pm-ujjwala",
+    "pm-vishwakarma",
+    "pmay-g",
+    "pmay-u-2",
+    "pmegp",
+    "pmfby",
+    "pmjjby",
+    "pmkvy",
+    "pmmvy",
+    "pmsby",
+    "post-matric-sc",
+    "sukanya-samriddhi"
+  ],
+  "baseline_threshold": 0.5,
+  "baseline": {
+    "micro_precision": 0.7405405405405405,
+    "micro_recall": 0.8954248366013072,
+    "micro_f1": 0.8106508875739645,
+    "macro_precision": 0.6599748645470445,
+    "macro_recall": 0.8425974389728114,
+    "macro_f1": 0.7176461499962102,
+    "weighted_precision": 0.791822713402141,
+    "weighted_recall": 0.8954248366013072,
+    "weighted_f1": 0.8297336764967898,
+    "exact_match_accuracy": 0.2230769230769231,
+    "hamming_loss": 0.05680473372781065,
+    "per_scheme": {
+      "apy": {
+        "precision": 0.375,
+        "recall": 0.3333333333333333,
+        "f1": 0.35294117647058826,
+        "support": 9
+      },
+      "csss": {
+        "precision": 0.3125,
+        "recall": 1.0,
+        "f1": 0.47619047619047616,
+        "support": 5
+      },
+      "ddu-gky": {
+        "precision": 0.25,
+        "recall": 0.75,
+        "f1": 0.375,
+        "support": 4
+      },
+      "ignoaps": {
+        "precision": 0.5,
+        "recall": 0.36363636363636365,
+        "f1": 0.42105263157894735,
+        "support": 11
+      },
+      "jss": {
+        "precision": 0.640625,
+        "recall": 0.7735849056603774,
+        "f1": 0.7008547008547008,
+        "support": 53
+      },
+      "minority-post-matric": {
+        "precision": 0.55,
+        "recall": 1.0,
+        "f1": 0.7096774193548387,
+        "support": 11
+      },
+      "naps-2": {
+        "precision": 0.8936170212765957,
+        "recall": 0.8571428571428571,
+        "f1": 0.875,
+        "support": 49
+      },
+      "nfbs": {
+        "precision": 0.5,
+        "recall": 0.6,
+        "f1": 0.5454545454545454,
+        "support": 10
+      },
+      "nmmss": {
+        "precision": 0.625,
+        "recall": 0.7142857142857143,
+        "f1": 0.6666666666666666,
+        "support": 7
+      },
+      "pm-kisan": {
+        "precision": 0.6666666666666666,
+        "recall": 1.0,
+        "f1": 0.8,
+        "support": 8
+      },
+      "pm-kisan-maandhan": {
+        "precision": 0.2727272727272727,
+        "recall": 0.75,
+        "f1": 0.4,
+        "support": 4
+      },
+      "pm-kusum": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 17
+      },
+      "pm-svanidhi": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 4
+      },
+      "pm-sym": {
+        "precision": 0.14285714285714285,
+        "recall": 0.5,
+        "f1": 0.2222222222222222,
+        "support": 2
+      },
+      "pm-ujjwala": {
+        "precision": 0.75,
+        "recall": 0.6,
+        "f1": 0.6666666666666666,
+        "support": 5
+      },
+      "pm-vishwakarma": {
+        "precision": 0.5714285714285714,
+        "recall": 1.0,
+        "f1": 0.7272727272727273,
+        "support": 4
+      },
+      "pmay-g": {
+        "precision": 0.8095238095238095,
+        "recall": 1.0,
+        "f1": 0.8947368421052632,
+        "support": 17
+      },
+      "pmay-u-2": {
+        "precision": 0.5909090909090909,
+        "recall": 1.0,
+        "f1": 0.7428571428571429,
+        "support": 13
+      },
+      "pmegp": {
+        "precision": 0.98,
+        "recall": 1.0,
+        "f1": 0.98989898989899,
+        "support": 98
+      },
+      "pmfby": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 17
+      },
+      "pmjjby": {
+        "precision": 0.47368421052631576,
+        "recall": 0.8181818181818182,
+        "f1": 0.6,
+        "support": 11
+      },
+      "pmkvy": {
+        "precision": 0.5625,
+        "recall": 0.9,
+        "f1": 0.6923076923076923,
+        "support": 20
+      },
+      "pmmvy": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 28
+      },
+      "pmsby": {
+        "precision": 0.6923076923076923,
+        "recall": 0.9473684210526315,
+        "f1": 0.8,
+        "support": 19
+      },
+      "post-matric-sc": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 7
+      },
+      "sukanya-samriddhi": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 26
+      }
+    }
+  },
+  "threshold_analysis": [
+    {
+      "threshold": 0.3,
+      "micro_precision": 0.38922155688622756,
+      "micro_recall": 0.9912854030501089,
+      "micro_f1": 0.558968058968059,
+      "macro_precision": 0.41503514769714467,
+      "macro_recall": 0.9871715586001302,
+      "macro_f1": 0.5358776508740049,
+      "weighted_precision": 0.559038154805351,
+      "weighted_recall": 0.9912854030501089,
+      "weighted_f1": 0.6728432933052787,
+      "exact_match_accuracy": 0.007692307692307693,
+      "hamming_loss": 0.21242603550295858
+    },
+    {
+      "threshold": 0.4,
+      "micro_precision": 0.5802631578947368,
+      "micro_recall": 0.9607843137254902,
+      "micro_f1": 0.7235438884331419,
+      "macro_precision": 0.5520442302822868,
+      "macro_recall": 0.9482185678951177,
+      "macro_f1": 0.6632068124741471,
+      "weighted_precision": 0.6908549723427216,
+      "weighted_recall": 0.9607843137254902,
+      "weighted_f1": 0.7790872909446501,
+      "exact_match_accuracy": 0.06153846153846154,
+      "hamming_loss": 0.09970414201183432
+    },
+    {
+      "threshold": 0.5,
+      "micro_precision": 0.7405405405405405,
+      "micro_recall": 0.8954248366013072,
+      "micro_f1": 0.8106508875739645,
+      "macro_precision": 0.6599748645470445,
+      "macro_recall": 0.8425974389728114,
+      "macro_f1": 0.7176461499962102,
+      "weighted_precision": 0.791822713402141,
+      "weighted_recall": 0.8954248366013072,
+      "weighted_f1": 0.8297336764967898,
+      "exact_match_accuracy": 0.2230769230769231,
+      "hamming_loss": 0.05680473372781065
+    },
+    {
+      "threshold": 0.6,
+      "micro_precision": 0.8798955613577023,
+      "micro_recall": 0.7342047930283224,
+      "micro_f1": 0.8004750593824228,
+      "macro_precision": 0.7589219094026786,
+      "macro_recall": 0.651050307715569,
+      "macro_f1": 0.6723472350998938,
+      "weighted_precision": 0.8832069103310933,
+      "weighted_recall": 0.7342047930283224,
+      "weighted_f1": 0.7859877577386641,
+      "exact_match_accuracy": 0.33076923076923076,
+      "hamming_loss": 0.04970414201183432
+    },
+    {
+      "threshold": 0.7,
+      "micro_precision": 0.963963963963964,
+      "micro_recall": 0.4662309368191721,
+      "micro_f1": 0.6284875183553598,
+      "macro_precision": 0.8177045177045177,
+      "macro_recall": 0.39622804978512344,
+      "macro_f1": 0.475116388577927,
+      "weighted_precision": 0.9545319362312826,
+      "weighted_recall": 0.4662309368191721,
+      "weighted_f1": 0.5830750213103154,
+      "exact_match_accuracy": 0.14615384615384616,
+      "hamming_loss": 0.07485207100591716
+    },
+    {
+      "threshold": 0.8,
+      "micro_precision": 0.9666666666666667,
+      "micro_recall": 0.12636165577342048,
+      "micro_f1": 0.22350674373795762,
+      "macro_precision": 0.37179487179487175,
+      "macro_recall": 0.14863250033741307,
+      "macro_f1": 0.17113475607709056,
+      "weighted_precision": 0.5635439360929556,
+      "weighted_recall": 0.12636165577342048,
+      "weighted_f1": 0.17471894964613666,
+      "exact_match_accuracy": 0.023076923076923078,
+      "hamming_loss": 0.11923076923076924
+    }
+  ],
+  "best_threshold_by_micro_f1": {
+    "threshold": 0.5,
+    "micro_precision": 0.7405405405405405,
+    "micro_recall": 0.8954248366013072,
+    "micro_f1": 0.8106508875739645,
+    "macro_precision": 0.6599748645470445,
+    "macro_recall": 0.8425974389728114,
+    "macro_f1": 0.7176461499962102,
+    "weighted_precision": 0.791822713402141,
+    "weighted_recall": 0.8954248366013072,
+    "weighted_f1": 0.8297336764967898,
+    "exact_match_accuracy": 0.2230769230769231,
+    "hamming_loss": 0.05680473372781065
+  },
+  "error_count_at_0_5": 101
+}

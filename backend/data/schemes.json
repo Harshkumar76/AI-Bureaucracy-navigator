@@ -12,7 +12,7 @@
         "farmer"
       ],
       "requires_cultivable_land": true,
-      "min_age": 18
+      "requires_no_income_tax": true
     },
     "documents": [
       "Aadhaar card",
@@ -163,7 +163,8 @@
     "description": "Housing assistance for rural households that are houseless or living in kutcha/dilapidated houses. Beneficiary list is based on SECC/Awaas+ survey data.",
     "rules": {
       "residence": "rural",
-      "requires_no_pucca_house": true
+      "requires_no_pucca_house": true,
+      "requires_external_verification": true
     },
     "documents": [
       "Aadhaar card",
@@ -186,6 +187,7 @@
     "rules": {
       "gender": "female",
       "min_age": 18,
+      "requires_no_lpg_connection": true,
       "requires_bpl_card": true
     },
     "documents": [
@@ -207,7 +209,7 @@
     "benefit": "₹5 lakh per family per year for hospitalization",
     "description": "Cashless health cover for poor and vulnerable families. Final inclusion is per SECC-2011 deprivation criteria / state beneficiary lists — check your name on the official portal.",
     "rules": {
-      "max_income": 300000
+      "requires_external_verification": true
     },
     "documents": [
       "Aadhaar card",
@@ -228,7 +230,9 @@
     "description": "Contributory pension scheme for workers, especially in the unorganised sector. Income-tax payers are not eligible to join (post Oct 2022 rule).",
     "rules": {
       "min_age": 18,
-      "max_age": 40
+      "max_age": 40,
+      "requires_bank_account": true,
+      "requires_no_income_tax": true
     },
     "documents": [
       "Aadhaar card",
@@ -249,7 +253,8 @@
     "description": "Accidental death and disability insurance, renewed annually via bank auto-debit.",
     "rules": {
       "min_age": 18,
-      "max_age": 70
+      "max_age": 70,
+      "requires_bank_account": true
     },
     "documents": [
       "Aadhaar card",
@@ -269,7 +274,8 @@
     "description": "One-year renewable term life insurance via bank auto-debit.",
     "rules": {
       "min_age": 18,
-      "max_age": 50
+      "max_age": 50,
+      "requires_bank_account": true
     },
     "documents": [
       "Aadhaar card",
@@ -311,7 +317,8 @@
       "occupation_in": [
         "artisan"
       ],
-      "min_age": 18
+      "min_age": 18,
+      "requires_external_verification": true
     },
     "documents": [
       "Aadhaar card",
@@ -381,7 +388,10 @@
     "benefit": "₹20,000 one-time assistance",
     "description": "Lump-sum assistance to a BPL household on the death of its primary breadwinner (aged 18–59).",
     "rules": {
-      "requires_bpl_card": true
+      "requires_bpl_card": true,
+      "requires_breadwinner_death": true,
+      "min_breadwinner_age": 18,
+      "max_breadwinner_age": 59
     },
     "documents": [
       "Death certificate of breadwinner",
@@ -392,5 +402,334 @@
     "official_url": "https://www.myscheme.gov.in/schemes/nfbs",
     "apply_mode": "Through Gram Panchayat / municipality",
     "last_verified": "2026-07-12"
+  },
+  {
+    "id": "pmjdy",
+    "name": "Pradhan Mantri Jan-Dhan Yojana",
+    "level": "central",
+    "state": "ALL",
+    "category": "Financial Inclusion",
+    "benefit": "Basic savings account with access to banking, RuPay card and eligible overdraft/insurance benefits",
+    "description": "Financial inclusion scheme for people who do not already have a basic savings bank account. Account opening is available through banks and Business Correspondent outlets.",
+    "rules": {
+      "requires_external_verification": true
+    },
+    "documents": [
+      "Aadhaar card or other accepted KYC document",
+      "Mobile number",
+      "Address/KYC proof"
+    ],
+    "official_url": "https://www.pmjdy.gov.in/scheme",
+    "apply_mode": "At a bank branch or Business Correspondent (Bank Mitra) outlet",
+    "last_verified": "2026-09-16"
+  },
+  {
+    "id": "pmmy",
+    "name": "Pradhan Mantri MUDRA Yojana",
+    "level": "central",
+    "state": "ALL",
+    "category": "Entrepreneurship",
+    "benefit": "Collateral-free institutional credit for eligible micro enterprises, with loan categories up to ₹20 lakh",
+    "description": "Credit scheme for non-corporate, non-farm micro enterprises and certain allied-agriculture activities. Lending is through participating banks, NBFCs and MFIs.",
+    "rules": {
+      "requires_external_verification": true
+    },
+    "documents": [
+      "Aadhaar/KYC documents",
+      "Business/project information",
+      "Bank account details",
+      "Documents required by lending institution"
+    ],
+    "official_url": "https://financialservices.gov.in/pradhan-mantri-mudra-yojana-pmmy",
+    "apply_mode": "Through participating banks, NBFCs or MFIs",
+    "last_verified": "2026-09-16"
+  },
+  {
+    "id": "pmegp",
+    "name": "Prime Minister's Employment Generation Programme",
+    "level": "central",
+    "state": "ALL",
+    "category": "Entrepreneurship",
+    "benefit": "Credit-linked subsidy support for setting up eligible new micro enterprises",
+    "description": "Supports new self-employment ventures and micro enterprises. Individuals must be above 18; additional education and project conditions apply for specified project sizes.",
+    "rules": {
+      "min_age": 18,
+      "requires_external_verification": true
+    },
+    "documents": [
+      "Aadhaar/KYC documents",
+      "Project report",
+      "Education certificate where applicable",
+      "Bank/account documents"
+    ],
+    "official_url": "https://www.pmegp.msme.gov.in/",
+    "apply_mode": "Online through the PMEGP portal and implementing agencies",
+    "last_verified": "2026-09-16"
+  },
+  {
+    "id": "pm-svanidhi",
+    "name": "PM Street Vendor's AtmaNirbhar Nidhi",
+    "level": "central",
+    "state": "ALL",
+    "category": "Livelihood",
+    "benefit": "Working-capital support through successive loan tranches for eligible street vendors",
+    "description": "Working-capital loan support for eligible street vendors identified through the applicable urban-local-body/vendor verification process, including eligible vendors in surrounding areas covered by the scheme.",
+    "rules": {
+      "occupation_in": [
+        "street_vendor"
+      ],
+      "requires_external_verification": true
+    },
+    "documents": [
+      "Certificate of Vending / ID card or applicable Letter of Recommendation",
+      "Aadhaar/KYC documents",
+      "Bank account details"
+    ],
+    "official_url": "https://pmsvanidhi.mohua.gov.in/",
+    "apply_mode": "Through the PM SVANidhi portal/mobile app or participating lending institutions",
+    "last_verified": "2026-09-16"
+  },
+  {
+    "id": "pm-kusum",
+    "name": "Pradhan Mantri Kisan Urja Suraksha evam Utthaan Mahabhiyaan (PM-KUSUM)",
+    "level": "central",
+    "state": "ALL",
+    "category": "Agriculture",
+    "benefit": "Support for solar agricultural pumps and solarisation of eligible agricultural pump systems",
+    "description": "Supports eligible farmers and other permitted groups under different components for decentralized solar power, standalone solar pumps and solarisation of grid-connected agricultural pumps.",
+    "rules": {
+      "occupation_in": [
+        "farmer"
+      ],
+      "requires_external_verification": true
+    },
+    "documents": [
+      "Aadhaar/KYC documents",
+      "Land records where applicable",
+      "Agriculture/pump or electricity connection documents where applicable",
+      "Bank details"
+    ],
+    "official_url": "https://mnre.gov.in/en/solar/schemes/",
+    "apply_mode": "Through the state implementing agency / designated portal",
+    "last_verified": "2026-09-16"
+  },
+  {
+    "id": "pm-surya-ghar",
+    "name": "PM Surya Ghar: Muft Bijli Yojana",
+    "level": "central",
+    "state": "ALL",
+    "category": "Energy",
+    "benefit": "Central financial assistance for eligible residential rooftop solar systems",
+    "description": "Supports residential consumers installing rooftop solar systems through the national portal. Eligibility includes Indian citizenship, a suitable roof, a valid residential electricity connection and no previous solar subsidy for the installation.",
+    "rules": {
+      "requires_external_verification": true
+    },
+    "documents": [
+      "Aadhaar/KYC documents",
+      "Residential electricity connection details",
+      "Bank account details",
+      "Property/roof-related documents where required"
+    ],
+    "official_url": "https://pmsuryaghar.gov.in/",
+    "apply_mode": "Apply through the National Portal and the local DISCOM process",
+    "last_verified": "2026-09-16"
+  },
+  {
+    "id": "pmmvy",
+    "name": "Pradhan Mantri Matru Vandana Yojana 2.0",
+    "level": "central",
+    "state": "ALL",
+    "category": "Women & Child",
+    "benefit": "Maternity cash support for eligible pregnant and lactating women",
+    "description": "Maternity benefit scheme for women meeting specified social, economic or occupational eligibility conditions. Benefit also covers a second child when the second child is a girl, subject to scheme conditions.",
+    "rules": {
+      "gender": "female",
+      "requires_external_verification": true
+    },
+    "documents": [
+      "Aadhaar",
+      "Bank/post-office account details",
+      "Pregnancy/childbirth-related documents",
+      "Eligibility-category proof where applicable"
+    ],
+    "official_url": "https://www.spniwcd.wcd.gov.in/pradhan-mantri-matru-vandana-yojna/faqs",
+    "apply_mode": "Through the PMMVY portal / Anganwadi or designated implementing channel",
+    "last_verified": "2026-09-16"
+  },
+  {
+    "id": "pmfby",
+    "name": "Pradhan Mantri Fasal Bima Yojana",
+    "level": "central",
+    "state": "ALL",
+    "category": "Agriculture",
+    "benefit": "Crop insurance protection against specified crop losses and risks under notified areas/crops",
+    "description": "Government crop-insurance scheme for farmers for notified crops and areas, subject to applicable season, crop, state and enrolment conditions.",
+    "rules": {
+      "occupation_in": [
+        "farmer"
+      ],
+      "requires_external_verification": true
+    },
+    "documents": [
+      "Aadhaar/KYC documents",
+      "Land/cultivation records",
+      "Crop and season details",
+      "Bank account details"
+    ],
+    "official_url": "https://pmfby.gov.in/",
+    "apply_mode": "Through the PMFBY portal, participating banks/financial channels or state-notified channels",
+    "last_verified": "2026-09-16"
+  },
+  {
+    "id": "pm-sym",
+    "name": "Pradhan Mantri Shram Yogi Maandhan",
+    "level": "central",
+    "state": "ALL",
+    "category": "Social Security",
+    "benefit": "Assured pension of ₹3,000 per month after age 60 for eligible subscribers",
+    "description": "Voluntary contributory pension scheme for unorganised workers aged 18–40 with monthly income up to ₹15,000, subject to exclusion conditions.",
+    "rules": {
+      "min_age": 18,
+      "max_age": 40,
+      "max_income": 15000,
+      "occupation_in": [
+        "street_vendor",
+        "unorganised_worker",
+        "agricultural_worker",
+        "construction_worker",
+        "domestic_worker",
+        "rickshaw_driver",
+        "artisan",
+        "other"
+      ]
+    },
+    "documents": [
+      "Aadhaar",
+      "Savings bank/Jan-Dhan account details",
+      "KYC documents"
+    ],
+    "official_url": "https://labour.gov.in/FAQ-0",
+    "apply_mode": "Through Common Service Centres (CSCs) / Maandhan enrolment channels",
+    "last_verified": "2026-09-16"
+  },
+  {
+    "id": "pm-kisan-maandhan",
+    "name": "Pradhan Mantri Kisan Maan-Dhan Yojana",
+    "level": "central",
+    "state": "ALL",
+    "category": "Agriculture",
+    "benefit": "Minimum assured pension of ₹3,000 per month after age 60 for eligible small and marginal farmers",
+    "description": "Voluntary contributory pension scheme for small and marginal landholding farmers entering between ages 18 and 40, subject to exclusion conditions.",
+    "rules": {
+      "min_age": 18,
+      "max_age": 40,
+      "occupation_in": [
+        "farmer"
+      ],
+      "requires_cultivable_land": true,
+      "requires_external_verification": true
+    },
+    "documents": [
+      "Aadhaar",
+      "Land records",
+      "Bank account details",
+      "Kisan/landholding-related documents where applicable"
+    ],
+    "official_url": "https://www.pmkmy.gov.in/",
+    "apply_mode": "Through CSCs, designated state channels or the PM-KMY portal",
+    "last_verified": "2026-09-16"
+  },
+  {
+    "id": "pmay-u-2",
+    "name": "Pradhan Mantri Awas Yojana – Urban 2.0",
+    "level": "central",
+    "state": "ALL",
+    "category": "Housing",
+    "benefit": "Housing assistance through PMAY-U 2.0 verticals for eligible urban families",
+    "description": "Housing support for eligible EWS/LIG/MIG families living in urban areas and having no pucca house anywhere in the country, subject to prior housing-benefit and other verification conditions.",
+    "rules": {
+      "residence": "urban",
+      "requires_no_pucca_house": true,
+      "max_income": 900000
+    },
+    "documents": [
+      "Aadhaar/Aadhaar Virtual ID",
+      "Income proof where required",
+      "Address/residence documents",
+      "Bank account details"
+    ],
+    "official_url": "https://pmay-urban.gov.in/",
+    "apply_mode": "Through the PMAY-U 2.0 Unified Web Portal, CSC or concerned ULB",
+    "last_verified": "2026-09-16"
+  },
+  {
+    "id": "naps-2",
+    "name": "National Apprenticeship Promotion Scheme 2.0",
+    "level": "central",
+    "state": "ALL",
+    "category": "Skill Development",
+    "benefit": "Government stipend support for eligible apprentices under the apprenticeship ecosystem",
+    "description": "Promotes apprenticeship training and provides partial stipend support under NAPS-2. The upper age limit for apprentices seeking partial stipend support is 35 at registration.",
+    "rules": {
+      "min_age": 14,
+      "max_age": 35,
+      "requires_external_verification": true
+    },
+    "documents": [
+      "Aadhaar/KYC documents",
+      "Bank account details",
+      "Education/skill documents",
+      "Apprenticeship registration details"
+    ],
+    "official_url": "https://www.apprenticeshipindia.gov.in/",
+    "apply_mode": "Register through the apprenticeship portal and apply to eligible apprenticeship opportunities",
+    "last_verified": "2026-09-16"
+  },
+  {
+    "id": "ddu-gky",
+    "name": "Deen Dayal Upadhyaya Grameen Kaushalya Yojana",
+    "level": "central",
+    "state": "ALL",
+    "category": "Skill Development",
+    "benefit": "Free placement-linked skill training for eligible rural youth",
+    "description": "Placement-linked skilling programme for rural youth from poor households. Standard age is 15–35, with relaxation up to 45 for women and specified vulnerable groups.",
+    "rules": {
+      "min_age": 15,
+      "max_age": 35,
+      "residence": "rural",
+      "requires_external_verification": true
+    },
+    "documents": [
+      "Aadhaar/KYC documents",
+      "Residence/rural-status documents where required",
+      "Income/BPL or category proof where applicable",
+      "Education documents"
+    ],
+    "official_url": "https://ddugky.info/",
+    "apply_mode": "Through state skill missions and approved training partners",
+    "last_verified": "2026-09-16"
+  },
+  {
+    "id": "jss",
+    "name": "Jan Shikshan Sansthan",
+    "level": "central",
+    "state": "ALL",
+    "category": "Skill Development",
+    "benefit": "Non-formal vocational skill training for eligible beneficiaries",
+    "description": "Provides doorstep/non-formal skill training for non-literates, neo-literates, persons with rudimentary education and school dropouts up to Class XII, generally aged 15–45, with priority to women and disadvantaged groups.",
+    "rules": {
+      "min_age": 15,
+      "max_age": 45,
+      "requires_external_verification": true
+    },
+    "documents": [
+      "Aadhaar/KYC documents",
+      "Age proof",
+      "Education/literacy documents where applicable",
+      "Category/disability documents where applicable"
+    ],
+    "official_url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2241731&lang=1&reg=6",
+    "apply_mode": "Through the local Jan Shikshan Sansthan centre",
+    "last_verified": "2026-09-16"
   }
 ]

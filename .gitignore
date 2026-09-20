@@ -8,3 +8,5 @@ venv/
 backend/data/*.db
 debug_*.py
 eval/eval_report.json
+
+eval/classifier/llm_cache.json

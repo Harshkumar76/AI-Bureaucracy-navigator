@@ -19,6 +19,11 @@ import re
 from typing import Optional
 
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
 
 
 def _cfg():
@@ -36,32 +41,81 @@ def available() -> bool:
 
 def _chat(messages, max_tokens=600) -> Optional[str]:
     cfg = _cfg()
+
     if not cfg["key"]:
+        print("[LLM] ERROR: No API key configured.")
         return None
+
     try:
+        url = f"{cfg['base']}/chat/completions"
+
+        print(f"[LLM] Calling: {url}")
+        print(f"[LLM] Model: {cfg['model']}")
+
         r = requests.post(
-            f"{cfg['base']}/chat/completions",
-            headers={"Authorization": f"Bearer {cfg['key']}"},
-            json={"model": cfg["model"], "messages": messages,
-                  "temperature": 0, "max_tokens": max_tokens},
+            url,
+            headers={
+                "Authorization": f"Bearer {cfg['key']}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": cfg["model"],
+                "messages": messages,
+                "temperature": 0,
+                "max_tokens": max_tokens,
+                "reasoning_effort": "low",
+                "include_reasoning": False,
+            },
             timeout=30,
         )
+
+        print(f"[LLM] HTTP status: {r.status_code}")
+
+        if not r.ok:
+            print(f"[LLM] Response: {r.text[:1000]}")
+
         r.raise_for_status()
-        return r.json()["choices"][0]["message"]["content"]
-    except Exception:
-        return None  # never let the LLM layer break the pipeline
+
+        data = r.json()
+        print("[LLM] RAW:",json.dumps(data,indent=2)[:5000])
+
+        content=data["choices"][0]["message"].get("content")
+
+        if not content:
+            print("[LLM] ERROR: Empty content returned.")
+            return None
+
+        return content
+
+    except Exception as e:
+        print(f"[LLM] ERROR: {type(e).__name__}: {e}")
+        return None
 
 
 EXTRACT_PROMPT = """You extract facts from a user's note into profile fields for an Indian government-scheme finder.
+
 Allowed fields and values:
-  age (int), gender (male/female/other), residence (rural/urban), annual_income (int, INR),
-  category (General/OBC/SC/ST/EWS), religion (Hindu/Muslim/Christian/Sikh/Buddhist/Jain/Parsi/Other),
-  occupation (student/farmer/salaried/self_employed/unemployed/unorganised_worker/artisan/other),
-  education_level (below_10th/10th_pass/12th_pass/ug/pg/not_studying),
-  marital_status (single/married/widowed/divorced), disability_pct (int),
-  has_bpl_card (bool), owns_cultivable_land (bool), owns_pucca_house (bool),
-  has_girl_child_under_10 (bool)
-Return ONLY a JSON object with the fields you are confident about. Empty object if none."""
+
+age (int),gender (male/female/other),residence (rural/urban),annual_income (int, INR),category (General/OBC/SC/ST/EWS),
+religion (Hindu/Muslim/Christian/Sikh/Buddhist/Jain/Parsi/Other),
+occupation (student/farmer/salaried/self_employed/unemployed/unorganised_worker/artisan/other),
+education_level (below_10th/10th_pass/12th_pass/ug/pg/not_studying),
+marital_status (single/married/widowed/divorced),disability_pct (int),has_bpl_card (bool),owns_cultivable_land (bool),
+owns_pucca_house (bool),has_girl_child_under_10 (bool),has_bank_account (bool),
+has_lpg_connection (bool),income_tax_payer (bool),government_employee (bool),
+breadwinner_deceased (bool),breadwinner_age (int),
+class_level (string),academic_percentage (float),receives_other_scholarship (bool),
+artisan_trade (string),street_vendor (bool),existing_business (bool)
+
+IMPORTANT:
+- Extract ONLY facts explicitly stated or clearly stated in the user's note.
+- Do NOT guess missing information.
+- Do NOT infer eligibility.
+- Do NOT infer a boolean merely because it seems likely.
+- If a fact is not known, omit that field.
+- Return ONLY a JSON object.
+- Return an empty object {} if no reliable facts can be extracted.
+"""
 
 
 def extract_facts(text: str) -> dict:

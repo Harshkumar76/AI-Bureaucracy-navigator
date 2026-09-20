@@ -1,0 +1,59 @@
+{
+  "dataset": {
+    "total_examples": 520,
+    "test_examples": 130,
+    "evaluated_examples": 0,
+    "number_of_labels": 26,
+    "labels": [
+      "apy",
+      "csss",
+      "ddu-gky",
+      "ignoaps",
+      "jss",
+      "minority-post-matric",
+      "naps-2",
+      "nfbs",
+      "nmmss",
+      "pm-kisan",
+      "pm-kisan-maandhan",
+      "pm-kusum",
+      "pm-svanidhi",
+      "pm-sym",
+      "pm-ujjwala",
+      "pm-vishwakarma",
+      "pmay-g",
+      "pmay-u-2",
+      "pmegp",
+      "pmfby",
+      "pmjjby",
+      "pmkvy",
+      "pmmvy",
+      "pmsby",
+      "post-matric-sc",
+      "sukanya-samriddhi"
+    ],
+    "seed": 42
+  },
+  "llm_operational_statistics": {
+    "examples_attempted": 0,
+    "successful_evaluations": 0,
+    "failed_evaluations": 0,
+    "success_rate": 0,
+    "failure_rate": 0,
+    "cache_hits": 0,
+    "cache_hit_rate": 0,
+    "api_failures": 0,
+    "rate_limit_failures": 0,
+    "validation_failures": 0
+  },
+  "quality_metrics": {
+    "llm_evaluated_examples": 0,
+    "classifier_evaluated_examples": 0,
+    "llm": null,
+    "classifier": null
+  },
+  "latency": {
+    "llm_api": null,
+    "classifier_inference": null
+  }
+}
